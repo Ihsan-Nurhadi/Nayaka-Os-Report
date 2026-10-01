@@ -1,0 +1,68 @@
+[
+  {
+    "id": "rab-1",
+    "projectId": "proj-1",
+    "totalAmount": 600000000,
+    "status": "disetujui",
+    "submittedBy": "Sony (Proyek)",
+    "decidedBy": "Lisna (Finance)",
+    "decidedAt": "2026-09-12T11:00:00.000Z",
+    "notes": "RAB disetujui sesuai rencana anggaran proyek.",
+    "items": [
+      { "category": "Material", "description": "Sensor Getaran & IoT Data Logger", "amount": 250000000 },
+      { "category": "Subkon", "description": "Jasa Kalibrasi & Pemasangan Sensor", "amount": 180000000 },
+      { "category": "Operasional", "description": "Sewa Crane & Sertifikasi K3", "amount": 90000000 },
+      { "category": "Perjalanan", "description": "Transportasi & Akomodasi Teknisi", "amount": 50000000 },
+      { "category": "Kontinjensi", "description": "Biaya Cadangan Lapangan", "amount": 30000000 }
+    ],
+    "createdAt": "2026-09-11T14:00:00.000Z"
+  },
+  {
+    "id": "rab-2",
+    "projectId": "proj-2",
+    "totalAmount": 220000000,
+    "status": "disetujui",
+    "submittedBy": "Yuri (Proyek)",
+    "decidedBy": "Lisna (Finance)",
+    "decidedAt": "2026-09-22T10:00:00.000Z",
+    "notes": "Disetujui penuh.",
+    "items": [
+      { "category": "Material", "description": "Smart Display Screen 55\" Commercial 8 Unit", "amount": 130000000 },
+      { "category": "Subkon", "description": "Instalasi Braket & Jalur Kabel Listrik", "amount": 50000000 },
+      { "category": "Operasional", "description": "Konfigurasi Software & Training User", "amount": 40000000 }
+    ],
+    "createdAt": "2026-09-21T11:00:00.000Z"
+  },
+  {
+    "id": "rab-3",
+    "projectId": "proj-3",
+    "totalAmount": 290000000,
+    "status": "diajukan",
+    "submittedBy": "Maulana (Proyek)",
+    "decidedBy": null,
+    "decidedAt": null,
+    "notes": "Pengajuan RAB awal untuk server rack, UPS 10kVA, dan wiring DC.",
+    "items": [
+      { "category": "Material", "description": "Rack Server 42U & Smart UPS APC 10kVA", "amount": 190000000 },
+      { "category": "Subkon", "description": "Jasa Wiring Data Center & Grounding", "amount": 65000000 },
+      { "category": "Operasional", "description": "Komisioning & Uji Beban DR", "amount": 35000000 }
+    ],
+    "createdAt": "2026-09-30T16:00:00.000Z"
+  },
+  {
+    "id": "rab-4",
+    "projectId": "proj-4",
+    "totalAmount": 350000000,
+    "status": "disetujui",
+    "submittedBy": "Sony (Proyek)",
+    "decidedBy": "Lisna (Finance)",
+    "decidedAt": "2026-07-17T10:00:00.000Z",
+    "notes": "Disetujui.",
+    "items": [
+      { "category": "Material", "description": "Cisco Catalyst Switch & Cat6 Belden", "amount": 230000000 },
+      { "category": "Subkon", "description": "Penarikan Kabel & Rak Server", "amount": 80000000 },
+      { "category": "Operasional", "description": "Testing & Sertifikasi Fluke Networks", "amount": 40000000 }
+    ],
+    "createdAt": "2026-07-16T10:00:00.000Z"
+  }
+]

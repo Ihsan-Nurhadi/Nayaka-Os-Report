@@ -1,0 +1,2291 @@
+<title>Nayaka OS</title>
+<style>
+/* ===================================================================
+   LAYOUT CONCEPT: sticky top bar (brand + role badge) + horizontal
+   segmented tab nav across 6 modules (Dashboard/Sales/Proyek/
+   Procurement/Finance/Tim), single scrolling column of cards per
+   module, mirroring the existing Pipeline Sales tool's visual system
+   for continuity across Nayaka's internal tools.
+   ===================================================================
+   TOKENS (shared Nayaka brand system)
+   =================================================================== */
+:root{
+  --bg:#F4F6FB; --surface:#FFFFFF; --surface-2:#EAF0FB; --border:#DCE3F0;
+  --fg:#101B2D; --muted:#5B6B84; --muted-2:#8996AC;
+  --navy:#1D3E73; --navy-deep:#132C54; --accent:#F48400; --accent-ink:#7A4000;
+  --good:#0ca30c; --good-bg:#E5F6E1; --good-ink:#0a6b0a;
+  --warn:#c97a12; --warn-bg:#FDEFDA; --warn-ink:#8a5300;
+  --bad:#d03b3b; --bad-bg:#FCEAEA; --bad-ink:#a02222;
+  --info:#2a78d6; --info-bg:#E7F0FC;
+  --violet:#7a52c9; --violet-bg:#EFE8FB; --violet-ink:#4f2f91;
+  --f1-1:#6da7ec; --f1-2:#3987e5; --f1-3:#256abf; --f1-4:#184f95;
+  --pic-1:#2a78d6; --pic-2:#eb6834; --pic-3:#1baf7a;
+  --shadow:0 1px 2px rgba(16,27,45,.06), 0 6px 20px rgba(16,27,45,.06);
+  --radius:14px;
+  --font-display:'Archivo',system-ui,sans-serif;
+  --font-body:'Source Sans 3',system-ui,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --bg:#0B1729; --surface:#122036; --surface-2:#16273F; --border:#25436E;
+    --fg:#EAF0FB; --muted:#9FB0CB; --muted-2:#7E90AC;
+    --navy:#7FA8F2; --navy-deep:#0E2549; --accent:#FFA333; --accent-ink:#3A2200;
+    --good:#3fcb7c; --good-bg:#123423; --good-ink:#7fe3ac;
+    --warn:#f0a93e; --warn-bg:#3A2A0E; --warn-ink:#ffce8a;
+    --bad:#ff7a63; --bad-bg:#3B1712; --bad-ink:#ffb0a2;
+    --info:#3987e5; --info-bg:#142A4D;
+    --violet:#a98cf0; --violet-bg:#271A42; --violet-ink:#d7c4ff;
+    --f1-1:#9ec5f4; --f1-2:#6da7ec; --f1-3:#3987e5; --f1-4:#256abf;
+    --pic-1:#3987e5; --pic-2:#d95926; --pic-3:#199e70;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#0B1729; --surface:#122036; --surface-2:#16273F; --border:#25436E;
+  --fg:#EAF0FB; --muted:#9FB0CB; --muted-2:#7E90AC;
+  --navy:#7FA8F2; --navy-deep:#0E2549; --accent:#FFA333; --accent-ink:#3A2200;
+  --good:#3fcb7c; --good-bg:#123423; --good-ink:#7fe3ac;
+  --warn:#f0a93e; --warn-bg:#3A2A0E; --warn-ink:#ffce8a;
+  --bad:#ff7a63; --bad-bg:#3B1712; --bad-ink:#ffb0a2;
+  --info:#3987e5; --info-bg:#142A4D;
+  --violet:#a98cf0; --violet-bg:#271A42; --violet-ink:#d7c4ff;
+  --f1-1:#9ec5f4; --f1-2:#6da7ec; --f1-3:#3987e5; --f1-4:#256abf;
+  --pic-1:#3987e5; --pic-2:#d95926; --pic-3:#199e70;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+}
+
+*{box-sizing:border-box;}
+body{background:var(--bg); color:var(--fg); font-family:var(--font-body); -webkit-font-smoothing:antialiased;}
+h1,h2,h3,.display{font-family:var(--font-display); text-wrap:balance;}
+.mono{font-family:var(--font-mono); font-variant-numeric:tabular-nums;}
+a{color:var(--info);}
+button{font-family:inherit;}
+
+#app{max-width:1220px; margin:0 auto; padding-inline:16px; padding-block:0 48px;}
+
+/* ---------- top bar ---------- */
+.topbar{
+  position:sticky; top:env(safe-area-inset-top,0px); z-index:30;
+  display:flex; align-items:center; gap:12px; justify-content:space-between; flex-wrap:wrap;
+  padding-block:14px; background:var(--bg); border-bottom:1px solid var(--border);
+  margin-inline:-16px; padding-inline:16px;
+}
+.brand{display:flex; align-items:center; gap:10px; min-width:0;}
+.brand .mark{
+  width:34px; height:34px; border-radius:50%; background:var(--navy-deep);
+  border:2px solid var(--accent); display:flex; align-items:center; justify-content:center;
+  color:var(--accent); font-family:var(--font-display); font-weight:800; font-size:16px; flex:none;
+}
+.brand .titles{min-width:0;}
+.brand .titles .app-name{font-size:11px; font-weight:700; letter-spacing:.08em; color:var(--accent); text-transform:uppercase;}
+.brand .titles h1{font-size:19px; font-weight:800; margin:0; color:var(--fg); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.who{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+.role-chip{
+  display:inline-flex; align-items:center; gap:7px; background:var(--surface-2); border:1px solid var(--border);
+  border-radius:999px; padding:6px 12px 6px 6px; font-size:12.5px; font-weight:700;
+}
+.role-chip .av{width:22px; height:22px; border-radius:50%; background:var(--navy); color:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; flex:none;}
+.btn{
+  appearance:none; border:1px solid var(--border); background:var(--surface); color:var(--fg);
+  padding:9px 14px; border-radius:10px; font-size:13.5px; font-weight:700; cursor:pointer;
+  display:inline-flex; align-items:center; gap:7px; white-space:nowrap; transition:transform .08s ease, box-shadow .08s ease;
+}
+.btn:hover{box-shadow:var(--shadow);}
+.btn:active{transform:scale(.98);}
+.btn-accent{background:var(--accent); border-color:var(--accent); color:#241200;}
+.btn-ghost{background:transparent; border-color:transparent;}
+.btn-sm{padding:6px 10px; font-size:12.5px; border-radius:8px;}
+.btn-bad{background:var(--bad-bg); border-color:var(--bad-bg); color:var(--bad-ink);}
+.btn-good{background:var(--good-bg); border-color:var(--good-bg); color:var(--good-ink);}
+.btn[disabled]{opacity:.45; cursor:not-allowed;}
+
+/* ---------- tabs ---------- */
+.tabs{display:flex; gap:4px; padding:4px; background:var(--surface-2); border-radius:12px; margin-block:16px; overflow-x:auto;}
+.tab{
+  flex:1; text-align:center; padding:9px 10px; border-radius:9px; font-weight:700; font-size:13px;
+  color:var(--muted); cursor:pointer; white-space:nowrap; border:none; background:transparent; font-family:inherit;
+}
+.tab.active{background:var(--surface); color:var(--navy); box-shadow:var(--shadow);}
+:root[data-theme="dark"] .tab.active{ color:var(--fg); }
+
+.view{display:none;}
+.view.active{display:block;}
+
+/* ---------- cards / tiles ---------- */
+.card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px;}
+.card + .card{margin-top:14px;}
+.section-title{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:12px; flex-wrap:wrap;}
+.section-title h2{font-size:15px; margin:0; color:var(--fg); font-weight:800;}
+.section-title .hint{font-size:12px; color:var(--muted-2);}
+
+.kpi-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:12px;}
+@media (max-width:980px){ .kpi-grid{grid-template-columns:repeat(3,1fr);} }
+@media (max-width:620px){ .kpi-grid{grid-template-columns:repeat(2,1fr);} }
+.kpi{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:15px; min-width:0;}
+.kpi .label{font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.05em;}
+.kpi .value{font-family:var(--font-display); font-size:23px; font-weight:800; margin-top:6px; color:var(--fg); font-variant-numeric:tabular-nums;}
+.kpi .sub{font-size:11.5px; color:var(--muted-2); margin-top:4px;}
+.kpi .sub.good{color:var(--good-ink);}
+.kpi .sub.bad{color:var(--bad-ink);}
+
+.grid-2{display:grid; grid-template-columns:1.3fr 1fr; gap:14px; align-items:start;}
+@media (max-width:860px){ .grid-2{grid-template-columns:1fr;} }
+
+/* ---------- funnel ---------- */
+.funnel-row{display:flex; align-items:center; gap:10px; margin-block:9px;}
+.funnel-row .flabel{width:100px; flex:none; font-size:12.5px; font-weight:700; color:var(--muted); text-align:right;}
+.funnel-row .ftrack{flex:1; background:var(--surface-2); border-radius:7px; height:26px; position:relative; overflow:hidden;}
+.funnel-row .ffill{height:100%; border-radius:7px; display:flex; align-items:center; justify-content:flex-end; padding-inline:9px; transition:width .4s ease;}
+.funnel-row .ffill span{color:#fff; font-size:12px; font-weight:800; font-variant-numeric:tabular-nums; text-shadow:0 1px 2px rgba(0,0,0,.25);}
+
+/* ---------- badges / pills ---------- */
+.badge{display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:999px; font-size:11.5px; font-weight:700; white-space:nowrap;}
+.badge.tone-info{background:var(--info-bg); color:var(--info);}
+.badge.tone-warn{background:var(--warn-bg); color:var(--warn-ink);}
+.badge.tone-good{background:var(--good-bg); color:var(--good-ink);}
+.badge.tone-bad{background:var(--bad-bg); color:var(--bad-ink);}
+.badge.tone-violet{background:var(--violet-bg); color:var(--violet-ink);}
+.badge.tone-muted{background:var(--surface-2); color:var(--muted);}
+
+/* ---------- toolbar / filters ---------- */
+.toolbar{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; align-items:center;}
+.toolbar select, .toolbar input[type=search]{
+  background:var(--surface); border:1px solid var(--border); color:var(--fg);
+  padding:8px 10px; border-radius:9px; font-size:13px; font-family:inherit; min-width:0;
+}
+.toolbar input[type=search]{flex:1; min-width:140px;}
+.toolbar .spacer{flex:1;}
+
+/* ---------- table ---------- */
+.table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius);}
+table{width:100%; border-collapse:collapse; font-size:13px; min-width:760px;}
+thead th{
+  text-align:left; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+  color:var(--muted); padding:10px 12px; background:var(--surface-2); border-bottom:1px solid var(--border); white-space:nowrap;
+}
+tbody td{padding:11px 12px; border-bottom:1px solid var(--border); vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:var(--surface-2);}
+td.num{font-family:var(--font-mono); font-variant-numeric:tabular-nums; text-align:right;}
+.row-actions{display:flex; gap:6px; justify-content:flex-end; flex-wrap:wrap;}
+.icon-btn{
+  width:28px; height:28px; border-radius:8px; border:1px solid var(--border); background:var(--surface);
+  color:var(--muted); display:inline-flex; align-items:center; justify-content:center; cursor:pointer;
+}
+.icon-btn:hover{color:var(--fg); background:var(--surface-2);}
+
+/* ---------- project cards ---------- */
+.proj-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:12px;}
+.proj-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:15px; cursor:pointer; display:flex; flex-direction:column; gap:10px; min-width:0;}
+.proj-card:hover{box-shadow:var(--shadow);}
+.proj-card .pc-top{display:flex; justify-content:space-between; gap:8px; align-items:flex-start;}
+.proj-card h3{font-size:14.5px; margin:0; line-height:1.3;}
+.proj-card .pc-cust{font-size:12px; color:var(--muted); margin-top:2px;}
+.proj-card .pc-pm{font-size:11.5px; color:var(--muted-2); margin-top:6px;}
+
+/* ---------- budget bar ---------- */
+.bbar{background:var(--surface-2); border-radius:7px; height:16px; position:relative; overflow:hidden;}
+.bbar .seg{position:absolute; top:0; bottom:0; left:0; border-radius:7px 0 0 7px;}
+.bbar .seg.committed{background:var(--pic-1); opacity:.55;}
+.bbar .seg.paid{background:var(--navy);}
+.bbar.over .seg.paid{background:var(--bad);}
+.bbar-legend{display:flex; gap:12px; font-size:11px; color:var(--muted-2); margin-top:6px; flex-wrap:wrap;}
+.bbar-legend .li{display:flex; align-items:center; gap:5px;}
+.bbar-legend .sw{width:9px; height:9px; border-radius:3px;}
+
+/* ---------- progress ---------- */
+.progress-track{background:var(--surface-2); border-radius:999px; height:10px; overflow:hidden;}
+.progress-fill{height:100%; background:var(--accent); border-radius:999px; transition:width .4s ease;}
+
+/* ---------- watchlist / feed ---------- */
+.watch-item{display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border);}
+.watch-item:last-child{border-bottom:none;}
+.watch-item .wtitle{font-size:13px; font-weight:700;}
+.watch-item .wmeta{font-size:11.5px; color:var(--muted-2);}
+.watch-item .wval{margin-left:auto; text-align:right; flex:none;}
+.watch-item .wval .n{font-family:var(--font-mono); font-weight:700; font-size:13px;}
+.watch-item .wval .l{font-size:10px; color:var(--muted-2); text-transform:uppercase; letter-spacing:.04em;}
+
+/* ---------- empty state ---------- */
+.empty{text-align:center; padding:40px 20px;}
+.empty .emoji-mark{width:48px; height:48px; margin:0 auto 12px; border-radius:16px; background:var(--surface-2); display:flex; align-items:center; justify-content:center; color:var(--accent); font-family:var(--font-display); font-weight:800; font-size:20px;}
+.empty h3{margin:0 0 6px; font-size:15.5px;}
+.empty p{margin:0 0 14px; color:var(--muted); font-size:13px; max-width:380px; margin-inline:auto;}
+.empty .empty-actions{display:flex; gap:8px; justify-content:center; flex-wrap:wrap;}
+
+/* ---------- modal ---------- */
+.overlay{position:fixed; inset:0; background:rgba(10,16,28,.5); display:none; align-items:flex-start; justify-content:center; z-index:100; padding:24px 16px; overflow-y:auto;}
+.overlay.open{display:flex;}
+.modal{background:var(--surface); border-radius:16px; width:100%; max-width:560px; padding:22px; box-shadow:var(--shadow); margin-block:auto;}
+.modal h3{margin:0 0 4px; font-size:17px;}
+.modal .modal-sub{font-size:12.5px; color:var(--muted); margin-bottom:16px;}
+.field{margin-bottom:13px;}
+.field label{display:block; font-size:12px; font-weight:700; color:var(--muted); margin-bottom:5px;}
+.field input, .field select, .field textarea{
+  width:100%; background:var(--bg); border:1px solid var(--border); color:var(--fg);
+  padding:9px 11px; border-radius:9px; font-size:13.5px; font-family:inherit;
+}
+.field textarea{resize:vertical; min-height:58px;}
+.field-row{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+@media (max-width:480px){ .field-row{grid-template-columns:1fr;} }
+.modal-actions{display:flex; justify-content:flex-end; gap:8px; margin-top:18px; flex-wrap:wrap;}
+.modal-actions .spacer{flex:1;}
+.gate-note{background:var(--warn-bg); color:var(--warn-ink); border-radius:9px; padding:10px 12px; font-size:12.5px; margin-bottom:13px;}
+
+/* ---------- detail panel (project) ---------- */
+.detail-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px 16px; margin-block:14px;}
+@media (max-width:480px){ .detail-grid{grid-template-columns:1fr;} }
+.detail-grid .dt{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; font-weight:700;}
+.detail-grid .dd{font-size:13.5px; font-weight:600; margin-top:2px;}
+.sub-table{margin-top:10px;}
+
+/* ---------- toast ---------- */
+#toast{position:fixed; bottom:calc(18px + env(safe-area-inset-bottom,0px)); left:50%; transform:translateX(-50%) translateY(20px); opacity:0; pointer-events:none; background:var(--navy-deep); color:#fff; padding:11px 18px; border-radius:11px; font-size:13px; font-weight:700; box-shadow:var(--shadow); transition:opacity .2s ease, transform .2s ease; z-index:200; max-width:90vw; text-align:center;}
+#toast.show{opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto;}
+
+/* ---------- misc ---------- */
+.skeleton{background:linear-gradient(90deg,var(--surface-2) 25%,var(--border) 37%,var(--surface-2) 63%); background-size:400% 100%; animation:sk 1.4s ease infinite; border-radius:8px;}
+@keyframes sk{0%{background-position:100% 50%}100%{background-position:0 50%}}
+.text-muted{color:var(--muted);}
+.legend{display:flex; gap:14px; flex-wrap:wrap; margin-top:10px; font-size:11.5px; color:var(--muted);}
+.legend .li{display:flex; align-items:center; gap:6px;}
+.legend .sw{width:10px; height:10px; border-radius:3px;}
+
+/* ---------- onboarding gate ---------- */
+.gate-wrap{max-width:420px; margin:60px auto; text-align:center;}
+.gate-wrap .mark{width:52px; height:52px; border-radius:50%; background:var(--navy-deep); border:2px solid var(--accent); color:var(--accent); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:800; font-size:22px; margin:0 auto 14px;}
+.gate-wrap h2{margin:0 0 6px;}
+.gate-wrap p{color:var(--muted); font-size:13.5px; margin:0 0 20px;}
+.gate-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; text-align:left;}
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=Source+Sans+3:wght@400;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+
+<div id="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="mark">n</div>
+      <div class="titles">
+        <div class="app-name">Nayaka</div>
+        <h1>Nayaka OS</h1>
+      </div>
+    </div>
+    <div class="who" id="who-box"></div>
+  </header>
+
+  <div id="gate" class="gate-wrap" hidden>
+    <div class="mark">n</div>
+    <h2>Masuk ke Nayaka OS</h2>
+    <p>Satu alur kerja dari leads sampai pembayaran &mdash; Sales, Proyek, Procurement, dan Finance dalam satu tempat.</p>
+    <div class="gate-card">
+      <div class="field">
+        <label for="gate-name">Nama Anda</label>
+        <input type="text" id="gate-name" placeholder="mis. Willy">
+      </div>
+      <div class="field" style="margin-bottom:6px;">
+        <label for="gate-role">Peran / Divisi</label>
+        <select id="gate-role">
+          <option value="sales">Sales / Busdev</option>
+          <option value="project">Project Team</option>
+          <option value="procurement">Procurement</option>
+          <option value="finance">Finance</option>
+          <option value="bod">BoD (Direksi) &mdash; lihat semua</option>
+        </select>
+      </div>
+      <button class="btn btn-accent" id="gate-enter" style="width:100%; justify-content:center; margin-top:10px;">Masuk</button>
+    </div>
+  </div>
+
+  <div id="main" hidden>
+    <nav class="tabs" id="tabs">
+      <button class="tab" data-view="dashboard">Dashboard</button>
+      <button class="tab" data-view="sales">Sales</button>
+      <button class="tab" data-view="projects">Proyek</button>
+      <button class="tab" data-view="procurement">Procurement</button>
+      <button class="tab" data-view="finance">Finance</button>
+      <button class="tab" data-view="team">Tim</button>
+    </nav>
+
+    <section class="view" id="view-dashboard"></section>
+    <section class="view" id="view-sales"></section>
+    <section class="view" id="view-projects"></section>
+    <section class="view" id="view-procurement"></section>
+    <section class="view" id="view-finance"></section>
+    <section class="view" id="view-team"></section>
+  </div>
+</div>
+
+<!-- generic modal -->
+<div class="overlay" id="overlay">
+  <div class="modal" id="modal-body"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* =================== config =================== */
+  var ROLES = {
+    sales: {label:'Sales / Busdev', short:'Sales'},
+    project: {label:'Project Team', short:'Proyek'},
+    procurement: {label:'Procurement', short:'Procurement'},
+    finance: {label:'Finance', short:'Finance'},
+    bod: {label:'BoD (Direksi)', short:'BoD'}
+  };
+
+  var LEAD_STAGES = [
+    {id:'lead_in', label:'Leads Masuk', order:0},
+    {id:'qualified', label:'Kualifikasi', order:1},
+    {id:'proposal', label:'Penawaran', order:2},
+    {id:'negotiation', label:'Negosiasi', order:3},
+    {id:'won', label:'Menang', order:4, terminal:'won'},
+    {id:'lost', label:'Kalah', order:4, terminal:'lost'}
+  ];
+  var FUNNEL_STAGES = LEAD_STAGES.filter(function(s){ return !s.terminal; });
+  var FUNNEL_COLORS = ['var(--f1-1)','var(--f1-2)','var(--f1-3)','var(--f1-4)'];
+
+  var PROJECT_STATUSES = {
+    planning:{label:'Perencanaan', tone:'info'},
+    ongoing:{label:'Berjalan', tone:'violet'},
+    delayed:{label:'Terlambat', tone:'bad'},
+    completed:{label:'Selesai', tone:'good'}
+  };
+  var PO_STATUSES = {
+    draft:{label:'Draft', tone:'muted'},
+    diajukan:{label:'Diajukan', tone:'info'},
+    disetujui:{label:'Disetujui', tone:'violet'},
+    dipesan:{label:'Dipesan', tone:'warn'},
+    diterima:{label:'Diterima', tone:'good'},
+    ditolak:{label:'Ditolak', tone:'bad'}
+  };
+  var PO_FLOW = ['draft','diajukan','disetujui','dipesan','diterima'];
+  var PAYMENT_STATUSES = {
+    pending:{label:'Menunggu Persetujuan', tone:'warn'},
+    approved:{label:'Disetujui', tone:'violet'},
+    rejected:{label:'Ditolak', tone:'bad'},
+    paid:{label:'Sudah Dibayar', tone:'good'}
+  };
+  var PAYMENT_CATEGORIES = ['Termin Subkon','Pembayaran Supplier','Operasional Proyek','Biaya Perjalanan','Lain-lain'];
+  var RAB_STATUSES = {
+    diajukan:{label:'Menunggu Persetujuan', tone:'warn'},
+    disetujui:{label:'Disetujui', tone:'good'},
+    ditolak:{label:'Ditolak', tone:'bad'}
+  };
+  var RAB_CATEGORIES = ['Material','Subkon','Operasional','Perjalanan','Kontinjensi','Lain-lain'];
+
+  /* =================== utils =================== */
+  function fmtRp(n){ n = Number(n)||0; return 'Rp' + Math.round(n).toLocaleString('id-ID'); }
+  function fmtRpShort(n){
+    n = Number(n)||0;
+    if(Math.abs(n) >= 1e9) return 'Rp' + (n/1e9).toLocaleString('id-ID',{maximumFractionDigits:1}) + ' M';
+    if(Math.abs(n) >= 1e6) return 'Rp' + (n/1e6).toLocaleString('id-ID',{maximumFractionDigits:0}) + ' Jt';
+    return fmtRp(n);
+  }
+  function fmtDate(s){
+    if(!s) return '-';
+    var d = new Date(s + (String(s).length===10 ? 'T00:00:00' : ''));
+    if(isNaN(d)) return '-';
+    return d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
+  }
+  function todayStr(){
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+  function monthKey(dateStr){ return dateStr ? String(dateStr).slice(0,7) : null; }
+  function daysBetween(a,b){ return Math.floor((b-a)/86400000); }
+  function esc(s){ var d=document.createElement('div'); d.textContent = (s==null?'':String(s)); return d.innerHTML; }
+  function clamp(n,a,b){ return Math.max(a,Math.min(b,n)); }
+  function initials(name){
+    name = (name||'?').trim();
+    var parts = name.split(/\s+/);
+    if(parts.length===1) return parts[0].slice(0,2).toUpperCase();
+    return (parts[0][0]+parts[parts.length-1][0]).toUpperCase();
+  }
+  function toast(msg){
+    var el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function(){ el.classList.remove('show'); }, 2600);
+  }
+  function badge(tone,label){ return '<span class="badge tone-'+tone+'">'+esc(label)+'</span>'; }
+  function byLine(){ return (state.viewerName||'Seseorang') + ' (' + (ROLES[state.role]||{short:state.role}).short + ')'; }
+
+  /* =================== state =================== */
+  var state = {
+    role: null, viewerName: null,
+    leads: [], leadsLoaded:false,
+    projects: [], projectsLoaded:false,
+    pos: [], posLoaded:false,
+    payments: [], paymentsLoaded:false,
+    rab: [], rabLoaded:false,
+    team: [], teamLoaded:false,
+    activity: [], activityLoaded:false,
+    target: null, targetLoaded:false,
+    currentView: 'dashboard',
+    canWrite: null,
+    salesFilters: {search:'', stage:''},
+    projectFilters: {search:'', status:''},
+    poFilters: {search:'', status:'', type:''},
+    paymentFilters: {search:'', status:''}
+  };
+
+  var db = null, userCap = null;
+
+  /* =================== role gate =================== */
+  function loadLocalProfile(){
+    try{
+      var raw = localStorage.getItem('nayakaos_profile');
+      if(raw){
+        var p = JSON.parse(raw);
+        if(p && p.name && p.role && ROLES[p.role]){ state.viewerName = p.name; state.role = p.role; return true; }
+      }
+    }catch(e){}
+    return false;
+  }
+  function saveLocalProfile(){
+    try{ localStorage.setItem('nayakaos_profile', JSON.stringify({name:state.viewerName, role:state.role})); }catch(e){}
+  }
+  function showGate(){
+    document.getElementById('gate').hidden = false;
+    document.getElementById('main').hidden = true;
+  }
+  function showMain(){
+    document.getElementById('gate').hidden = true;
+    document.getElementById('main').hidden = false;
+    renderWhoBox();
+    renderAll();
+  }
+  function renderWhoBox(){
+    var box = document.getElementById('who-box');
+    if(!state.role){ box.innerHTML=''; return; }
+    box.innerHTML =
+      '<div class="role-chip"><span class="av">'+esc(initials(state.viewerName))+'</span>'+esc(state.viewerName)+' &middot; '+esc(ROLES[state.role].short)+'</div>'+
+      '<button class="btn btn-ghost btn-sm" id="btn-switch-role">Ganti</button>'+
+      '<button class="btn btn-ghost btn-sm" id="btn-reset-demo" title="Muat ulang sample data contoh">Reset Demo</button>';
+    document.getElementById('btn-switch-role').addEventListener('click', function(){
+      showGate();
+      document.getElementById('gate-name').value = state.viewerName||'';
+      document.getElementById('gate-role').value = state.role||'sales';
+    });
+    var resetBtn = document.getElementById('btn-reset-demo');
+    if(resetBtn){
+      resetBtn.addEventListener('click', function(){
+        if(confirm('Muat ulang sample data demo Nayaka OS? Perubahan data lokal akan dikembalikan ke data contoh awal.')){
+          if(db && db.resetData){
+            db.resetData();
+            toast('Sample data berhasil dimuat ulang');
+          }
+        }
+      });
+    }
+  }
+
+  document.getElementById('gate-enter').addEventListener('click', function(){
+    var name = document.getElementById('gate-name').value.trim();
+    var role = document.getElementById('gate-role').value;
+    if(!name){ toast('Isi nama Anda dulu'); return; }
+    state.viewerName = name; state.role = role;
+    saveLocalProfile();
+    showMain();
+  });
+
+  /* =================== tabs =================== */
+  document.getElementById('tabs').addEventListener('click', function(e){
+    var btn = e.target.closest('.tab');
+    if(!btn) return;
+    state.currentView = btn.getAttribute('data-view');
+    renderAll();
+  });
+
+  /* =================== sample data & local db adapter =================== */
+  function getSampleData(){
+    var now = new Date();
+    function dStr(offsetDays){
+      var d = new Date(now.getTime() + offsetDays * 86400000);
+      return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    }
+    function isoStr(offsetDays, hour){
+      var d = new Date(now.getTime() + offsetDays * 86400000);
+      d.setHours(hour || 9, 0, 0, 0);
+      return d.toISOString();
+    }
+
+    return {
+      team: [
+        { id:"willy", name:"Willy", role:"sales", createdAt: isoStr(-30, 8) },
+        { id:"arvam", name:"Arvam", role:"sales", createdAt: isoStr(-30, 8) },
+        { id:"jessica", name:"Jessica", role:"sales", createdAt: isoStr(-30, 8) },
+        { id:"sony", name:"Sony", role:"project", createdAt: isoStr(-30, 8) },
+        { id:"yuri", name:"Yuri", role:"project", createdAt: isoStr(-30, 8) },
+        { id:"maulana", name:"Maulana", role:"project", createdAt: isoStr(-30, 8) },
+        { id:"bilal", name:"Bilal", role:"project", createdAt: isoStr(-30, 8) },
+        { id:"nathan", name:"Nathan", role:"project", createdAt: isoStr(-30, 8) },
+        { id:"evan", name:"Evan", role:"project", createdAt: isoStr(-30, 8) },
+        { id:"allan", name:"Allan", role:"project", createdAt: isoStr(-30, 8) },
+        { id:"lisna", name:"Lisna (Admin Support)", role:"finance", createdAt: isoStr(-30, 8) }
+      ],
+      leads: [
+        {
+          id: "lead-pupr",
+          customer: "Kementerian PUPR",
+          sector: "Infrastruktur & Publik",
+          pic: "Willy",
+          solution: "Sistem Sensor Monitoring Jembatan IoT",
+          value: 850000000,
+          stage: "won",
+          notes: "Tender selesai dan kontrak proyek telah resmi ditandatangani.",
+          closedAt: dStr(-6),
+          createdAt: isoStr(-28, 9),
+          updatedAt: isoStr(-6, 11)
+        },
+        {
+          id: "lead-rsup",
+          customer: "RSUP Fatmawati",
+          sector: "Kesehatan",
+          pic: "Arvam",
+          solution: "Digital Signage & Queue Management",
+          value: 320000000,
+          stage: "won",
+          notes: "Pengadaan layar informasi antrean poli rawat jalan.",
+          closedAt: dStr(-3),
+          createdAt: isoStr(-20, 10),
+          updatedAt: isoStr(-3, 14)
+        },
+        {
+          id: "lead-danamon",
+          customer: "PT Bank Danamon Tbk",
+          sector: "Perbankan & Keuangan",
+          pic: "Jessica",
+          solution: "Modernisasi Data Center & DR Site",
+          value: 420000000,
+          stage: "won",
+          notes: "Deal dimenangkan minggu ini, RAB diajukan ke Finance.",
+          closedAt: dStr(-1),
+          createdAt: isoStr(-15, 11),
+          updatedAt: isoStr(-1, 16)
+        },
+        {
+          id: "lead-mandiri",
+          customer: "Bank Mandiri",
+          sector: "Perbankan & Keuangan",
+          pic: "Willy",
+          solution: "IT Core Branch Infrastructure",
+          value: 450000000,
+          stage: "negotiation",
+          notes: "Tahap negosiasi final SLA dan diskon volume perangkat.",
+          closedAt: null,
+          createdAt: isoStr(-12, 10),
+          updatedAt: isoStr(-2, 15)
+        },
+        {
+          id: "lead-telkom",
+          customer: "PT Telkom Indonesia",
+          sector: "Telekomunikasi",
+          pic: "Jessica",
+          solution: "Fiber Optic Backbone & OSP Network",
+          value: 1200000000,
+          stage: "proposal",
+          notes: "Klarifikasi teknis proposal rute kabel FO regional Jawa Barat.",
+          closedAt: null,
+          createdAt: isoStr(-10, 14),
+          updatedAt: isoStr(-3, 16)
+        },
+        {
+          id: "lead-astra",
+          customer: "PT Astra International",
+          sector: "Manufaktur & Otomotif",
+          pic: "Willy",
+          solution: "Corporate SD-WAN & Network Security",
+          value: 600000000,
+          stage: "qualified",
+          notes: "Kebutuhan peremajaan router & firewall di 12 cabang kantor.",
+          closedAt: null,
+          createdAt: isoStr(-7, 9),
+          updatedAt: isoStr(-2, 11)
+        },
+        {
+          id: "lead-ui",
+          customer: "Universitas Indonesia",
+          sector: "Pendidikan Tinggi",
+          pic: "Jessica",
+          solution: "High-Density Campus Wi-Fi 6",
+          value: 280000000,
+          stage: "lead_in",
+          notes: "Diskusi awal dengan biro TI kampus untuk area perpustakaan utama.",
+          closedAt: null,
+          createdAt: isoStr(-1, 13),
+          updatedAt: isoStr(-1, 13)
+        },
+        {
+          id: "lead-pertamina",
+          customer: "PT Pertamina EP",
+          sector: "Energi & Migas",
+          pic: "Arvam",
+          solution: "Industrial Explosion-Proof CCTV",
+          value: 500000000,
+          stage: "lost",
+          notes: "Kalah di evaluasi komersial dengan rekanan lokal eksisting.",
+          closedAt: dStr(-14),
+          createdAt: isoStr(-25, 10),
+          updatedAt: isoStr(-14, 15)
+        }
+      ],
+      projects: [
+        {
+          id: "proj-1",
+          leadId: "lead-pupr",
+          name: "Sistem Sensor Monitoring Jembatan PUPR",
+          customer: "Kementerian PUPR",
+          contractValue: 850000000,
+          budget: 600000000,
+          approvedRabId: "rab-1",
+          pm: "Sony",
+          startDate: dStr(-20),
+          targetEndDate: dStr(40),
+          status: "ongoing",
+          progressPercent: 65,
+          notes: "Pemasangan sensor getaran tahap 1 selesai. Menunggu pengiriman batch 2.",
+          createdAt: isoStr(-20, 8),
+          updatedAt: isoStr(-2, 10)
+        },
+        {
+          id: "proj-2",
+          leadId: "lead-rsup",
+          name: "Digital Signage & Queue RSUP Fatmawati",
+          customer: "RSUP Fatmawati",
+          contractValue: 320000000,
+          budget: 220000000,
+          approvedRabId: "rab-2",
+          pm: "Yuri",
+          startDate: dStr(-10),
+          targetEndDate: dStr(25),
+          status: "ongoing",
+          progressPercent: 40,
+          notes: "Display commercial grade sudah diterima, pengerjaan jalur listrik & braket.",
+          createdAt: isoStr(-10, 9),
+          updatedAt: isoStr(-1, 14)
+        },
+        {
+          id: "proj-3",
+          leadId: "lead-danamon",
+          name: "Modernisasi Data Center Bank Danamon",
+          customer: "PT Bank Danamon Tbk",
+          contractValue: 420000000,
+          budget: 0,
+          approvedRabId: null,
+          pm: "Maulana",
+          startDate: dStr(-1),
+          targetEndDate: dStr(60),
+          status: "planning",
+          progressPercent: 10,
+          notes: "RAB diajukan oleh Project Team, menunggu peninjauan dan persetujuan Finance.",
+          createdAt: isoStr(-1, 16),
+          updatedAt: isoStr(-1, 16)
+        },
+        {
+          id: "proj-4",
+          leadId: null,
+          name: "Revitalisasi Jaringan Data Kanwil DJP",
+          customer: "Kanwil DJP Jakarta",
+          contractValue: 500000000,
+          budget: 350000000,
+          approvedRabId: "rab-4",
+          pm: "Sony",
+          startDate: dStr(-75),
+          targetEndDate: dStr(-5),
+          status: "completed",
+          progressPercent: 100,
+          notes: "Proyek tuntas 100%, serah terima & BAST sudah ditandatangani.",
+          createdAt: isoStr(-75, 8),
+          updatedAt: isoStr(-5, 17)
+        }
+      ],
+      rab: [
+        {
+          id: "rab-1",
+          projectId: "proj-1",
+          totalAmount: 600000000,
+          status: "disetujui",
+          submittedBy: "Sony (Proyek)",
+          decidedBy: "Lisna (Finance)",
+          decidedAt: isoStr(-18, 11),
+          notes: "RAB disetujui sesuai rencana anggaran proyek.",
+          items: [
+            { category: "Material", description: "Sensor Getaran & IoT Data Logger", amount: 250000000 },
+            { category: "Subkon", description: "Jasa Kalibrasi & Pemasangan Sensor", amount: 180000000 },
+            { category: "Operasional", description: "Sewa Crane & Sertifikasi K3", amount: 90000000 },
+            { category: "Perjalanan", description: "Transportasi & Akomodasi Teknisi", amount: 50000000 },
+            { category: "Kontinjensi", description: "Biaya Cadangan Lapangan", amount: 30000000 }
+          ],
+          createdAt: isoStr(-19, 14)
+        },
+        {
+          id: "rab-2",
+          projectId: "proj-2",
+          totalAmount: 220000000,
+          status: "disetujui",
+          submittedBy: "Yuri (Proyek)",
+          decidedBy: "Lisna (Finance)",
+          decidedAt: isoStr(-9, 10),
+          notes: "Disetujui penuh.",
+          items: [
+            { category: "Material", description: "Smart Display Screen 55\" Commercial 8 Unit", amount: 130000000 },
+            { category: "Subkon", description: "Instalasi Braket & Jalur Kabel Listrik", amount: 50000000 },
+            { category: "Operasional", description: "Konfigurasi Software & Training User", amount: 40000000 }
+          ],
+          createdAt: isoStr(-10, 11)
+        },
+        {
+          id: "rab-3",
+          projectId: "proj-3",
+          totalAmount: 290000000,
+          status: "diajukan",
+          submittedBy: "Maulana (Proyek)",
+          decidedBy: null,
+          decidedAt: null,
+          notes: "Pengajuan RAB awal untuk server rack, UPS 10kVA, dan wiring DC.",
+          items: [
+            { category: "Material", description: "Rack Server 42U & Smart UPS APC 10kVA", amount: 190000000 },
+            { category: "Subkon", description: "Jasa Wiring Data Center & Grounding", amount: 65000000 },
+            { category: "Operasional", description: "Komisioning & Uji Beban DR", amount: 35000000 }
+          ],
+          createdAt: isoStr(-1, 16)
+        },
+        {
+          id: "rab-4",
+          projectId: "proj-4",
+          totalAmount: 350000000,
+          status: "disetujui",
+          submittedBy: "Sony (Proyek)",
+          decidedBy: "Lisna (Finance)",
+          decidedAt: isoStr(-73, 10),
+          notes: "Disetujui.",
+          items: [
+            { category: "Material", description: "Cisco Catalyst Switch & Cat6 Belden", amount: 230000000 },
+            { category: "Subkon", description: "Penarikan Kabel & Rak Server", amount: 80000000 },
+            { category: "Operasional", description: "Testing & Sertifikasi Fluke Networks", amount: 40000000 }
+          ],
+          createdAt: isoStr(-74, 10)
+        }
+      ],
+      pos: [
+        {
+          id: "po-1",
+          projectId: "proj-1",
+          vendorName: "PT Sensorika Prima Indonesia",
+          vendorType: "supplier",
+          description: "Pengadaan Sensor Getaran & Data Logger IoT",
+          amount: 250000000,
+          dueDate: dStr(12),
+          status: "dipesan",
+          requestedBy: "Sony (Proyek)",
+          approvedBy: "Lisna (Finance)",
+          createdAt: isoStr(-17, 9),
+          updatedAt: isoStr(-16, 14)
+        },
+        {
+          id: "po-2",
+          projectId: "proj-1",
+          vendorName: "CV Tehnik Mandiri Jaya",
+          vendorType: "subkon",
+          description: "Jasa Instalasi & Kalibrasi Sensor Jembatan",
+          amount: 180000000,
+          dueDate: dStr(25),
+          status: "disetujui",
+          requestedBy: "Sony (Proyek)",
+          approvedBy: "Lisna (Finance)",
+          createdAt: isoStr(-16, 10),
+          updatedAt: isoStr(-15, 11)
+        },
+        {
+          id: "po-3",
+          projectId: "proj-2",
+          vendorName: "PT Display Solusindo Media",
+          vendorType: "supplier",
+          description: "Display Screen Commercial Grade 55\" (8 Unit)",
+          amount: 130000000,
+          dueDate: dStr(-2),
+          status: "diterima",
+          requestedBy: "Yuri (Proyek)",
+          approvedBy: "Lisna (Finance)",
+          createdAt: isoStr(-8, 9),
+          updatedAt: isoStr(-2, 16)
+        },
+        {
+          id: "po-4",
+          projectId: "proj-2",
+          vendorName: "CV Cipta Karya Listrik",
+          vendorType: "subkon",
+          description: "Pekerjaan Instalasi Daya & Braket Dinding Display",
+          amount: 50000000,
+          dueDate: dStr(15),
+          status: "diajukan",
+          requestedBy: "Yuri (Proyek)",
+          approvedBy: null,
+          createdAt: isoStr(-2, 11),
+          updatedAt: isoStr(-2, 11)
+        }
+      ],
+      payments: [
+        {
+          id: "pay-1",
+          projectId: "proj-1",
+          poId: "po-1",
+          category: "Pembayaran Supplier",
+          amount: 125000000,
+          status: "paid",
+          notes: "Uang muka termin 1 (50%) pemesanan unit sensor",
+          requestedBy: "Sony (Proyek)",
+          decidedBy: "Lisna (Finance)",
+          decidedAt: isoStr(-15, 10),
+          paidAt: isoStr(-14, 14),
+          createdAt: isoStr(-16, 9)
+        },
+        {
+          id: "pay-2",
+          projectId: "proj-1",
+          poId: "po-1",
+          category: "Pembayaran Supplier",
+          amount: 125000000,
+          status: "pending",
+          notes: "Pelunasan sisa 50% sensor barang tiba di gudang",
+          requestedBy: "Sony (Proyek)",
+          decidedBy: null,
+          decidedAt: null,
+          paidAt: null,
+          createdAt: isoStr(-4, 9)
+        },
+        {
+          id: "pay-3",
+          projectId: "proj-2",
+          poId: "po-3",
+          category: "Pembayaran Supplier",
+          amount: 130000000,
+          status: "pending",
+          notes: "Pembayaran pelunasan unit display (barang sudah diterima)",
+          requestedBy: "Yuri (Proyek)",
+          decidedBy: null,
+          decidedAt: null,
+          paidAt: null,
+          createdAt: isoStr(-1, 10)
+        },
+        {
+          id: "pay-4",
+          projectId: "proj-1",
+          poId: null,
+          category: "Biaya Perjalanan",
+          amount: 15000000,
+          status: "approved",
+          notes: "Akomodasi & uang saku teknisi survey jembatan",
+          requestedBy: "Sony (Proyek)",
+          decidedBy: "Lisna (Finance)",
+          decidedAt: isoStr(-2, 11),
+          paidAt: null,
+          createdAt: isoStr(-3, 13)
+        }
+      ],
+      activity: [
+        {
+          id: "act-1",
+          entityType: "payment",
+          entityId: "pay-3",
+          action: "requested",
+          detail: "Pembayaran Supplier (Rp130.000.000)",
+          by: "Yuri (Proyek)",
+          role: "project",
+          at: isoStr(-1, 10)
+        },
+        {
+          id: "act-2",
+          entityType: "rab",
+          entityId: "rab-3",
+          action: "submitted",
+          detail: "Modernisasi Data Center Bank Danamon (Rp290.000.000)",
+          by: "Maulana (Proyek)",
+          role: "project",
+          at: isoStr(-1, 16)
+        },
+        {
+          id: "act-3",
+          entityType: "lead",
+          entityId: "lead-danamon",
+          action: "won",
+          detail: "Modernisasi Data Center & DR Site (Rp420.000.000)",
+          by: "Jessica (Sales)",
+          role: "sales",
+          at: isoStr(-1, 15)
+        },
+        {
+          id: "act-4",
+          entityType: "payment",
+          entityId: "pay-2",
+          action: "requested",
+          detail: "Pembayaran Supplier (Rp125.000.000)",
+          by: "Sony (Proyek)",
+          role: "project",
+          at: isoStr(-4, 9)
+        }
+      ],
+      target: {
+        value: 15000000000,
+        month: "FY2026",
+        updatedAt: isoStr(-30, 8),
+        updatedBy: "Lisna (Finance)"
+      }
+    };
+  }
+
+  function createLocalDb(){
+    var STORAGE_KEY = 'nayakaos_db_store_v1';
+    var subscribers = {};
+    var targetSubscribers = [];
+
+    function loadStore(){
+      try{
+        var raw = localStorage.getItem(STORAGE_KEY);
+        if(raw){
+          var parsed = JSON.parse(raw);
+          if(parsed && parsed.leads && parsed.leads.length > 0) return parsed;
+        }
+      }catch(e){}
+      var sample = getSampleData();
+      saveStore(sample);
+      return sample;
+    }
+
+    function saveStore(data){
+      try{
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      }catch(e){}
+    }
+
+    function notify(colName){
+      var store = loadStore();
+      var cbs = subscribers[colName] || [];
+      if(!cbs.length) return;
+      var list = (store[colName] || []).slice();
+      cbs.forEach(function(sub){
+        var items = list.slice();
+        if(sub.sortField){
+          items.sort(function(a,b){
+            var va = a[sub.sortField] != null ? a[sub.sortField] : '';
+            var vb = b[sub.sortField] != null ? b[sub.sortField] : '';
+            if(sub.sortDir === 'desc') return vb > va ? 1 : vb < va ? -1 : 0;
+            return va > vb ? 1 : va < vb ? -1 : 0;
+          });
+        }
+        if(sub.limitNum && items.length > sub.limitNum){
+          items = items.slice(0, sub.limitNum);
+        }
+        var snap = {
+          docs: items.map(function(item){
+            return {
+              id: item.id,
+              data: function(){ return Object.assign({}, item); }
+            };
+          })
+        };
+        try{ sub.cb(snap); }catch(err){ console.error(err); }
+      });
+    }
+
+    function notifyTarget(){
+      var store = loadStore();
+      targetSubscribers.forEach(function(cb){
+        var snap = {
+          exists: !!store.target,
+          data: function(){ return store.target ? Object.assign({}, store.target) : null; }
+        };
+        try{ cb(snap); }catch(err){ console.error(err); }
+      });
+    }
+
+    function makeQuery(colName){
+      var q = {
+        sortField: null,
+        sortDir: 'asc',
+        limitNum: null,
+        orderBy: function(field, dir){
+          q.sortField = field;
+          q.sortDir = dir || 'asc';
+          return q;
+        },
+        limit: function(n){
+          q.limitNum = n;
+          return q;
+        },
+        onSnapshot: function(cb, errCb){
+          if(!subscribers[colName]) subscribers[colName] = [];
+          var sub = { cb: cb, sortField: q.sortField, sortDir: q.sortDir, limitNum: q.limitNum };
+          subscribers[colName].push(sub);
+          setTimeout(function(){
+            var store = loadStore();
+            var list = (store[colName] || []).slice();
+            if(sub.sortField){
+              list.sort(function(a,b){
+                var va = a[sub.sortField] != null ? a[sub.sortField] : '';
+                var vb = b[sub.sortField] != null ? b[sub.sortField] : '';
+                if(sub.sortDir === 'desc') return vb > va ? 1 : vb < va ? -1 : 0;
+                return va > vb ? 1 : va < vb ? -1 : 0;
+              });
+            }
+            if(sub.limitNum && list.length > sub.limitNum){
+              list = list.slice(0, sub.limitNum);
+            }
+            var snap = {
+              docs: list.map(function(item){
+                return {
+                  id: item.id,
+                  data: function(){ return Object.assign({}, item); }
+                };
+              })
+            };
+            cb(snap);
+          }, 0);
+        },
+        add: async function(data){
+          var store = loadStore();
+          if(!store[colName]) store[colName] = [];
+          var newId = (data && data.id) || (colName + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).substr(2, 4));
+          var doc = Object.assign({}, data, { id: newId });
+          store[colName].unshift(doc);
+          saveStore(store);
+          notify(colName);
+          return { id: newId };
+        },
+        doc: function(id){
+          return {
+            update: async function(partial){
+              var store = loadStore();
+              var list = store[colName] || [];
+              var found = false;
+              for(var i=0; i<list.length; i++){
+                if(list[i].id === id){
+                  Object.assign(list[i], partial);
+                  found = true;
+                  break;
+                }
+              }
+              if(found){
+                saveStore(store);
+                notify(colName);
+              }
+            },
+            delete: async function(){
+              var store = loadStore();
+              var list = store[colName] || [];
+              store[colName] = list.filter(function(item){ return item.id !== id; });
+              saveStore(store);
+              notify(colName);
+            }
+          };
+        }
+      };
+      return q;
+    }
+
+    return {
+      resetData: function(){
+        var fresh = getSampleData();
+        saveStore(fresh);
+        Object.keys(subscribers).forEach(function(col){ notify(col); });
+        notifyTarget();
+      },
+      collection: function(colName){
+        return makeQuery(colName);
+      },
+      doc: function(path){
+        if(path === 'settings/target'){
+          return {
+            onSnapshot: function(cb, errCb){
+              targetSubscribers.push(cb);
+              setTimeout(function(){
+                var store = loadStore();
+                cb({
+                  exists: !!store.target,
+                  data: function(){ return store.target ? Object.assign({}, store.target) : null; }
+                });
+              }, 0);
+            },
+            set: async function(newData){
+              var store = loadStore();
+              store.target = Object.assign({}, newData);
+              saveStore(store);
+              notifyTarget();
+            }
+          };
+        }
+        throw new Error('Unsupported doc path: ' + path);
+      }
+    };
+  }
+
+  /* =================== db bootstrap =================== */
+  async function initCapabilities(){
+    try{
+      if(window.claude && window.claude.use){
+        db = await window.claude.use('db');
+        userCap = await window.claude.use('user');
+      }
+    }catch(e){ /* degraded mode */ }
+
+    if(!db){
+      db = createLocalDb();
+    }
+    if(!userCap){
+      userCap = { can: async function(){ return true; } };
+    }
+    state.canWrite = true;
+
+    subscribe('leads','leads');
+    subscribe('projects','projects');
+    subscribe('pos','pos');
+    subscribe('payments','payments');
+    subscribe('rab','rab');
+    subscribe('team','team');
+    subscribeActivity();
+    subscribeTarget();
+  }
+
+  function subscribe(stateKey, collection){
+    db.collection(collection).orderBy('createdAt','desc').limit(1000).onSnapshot(function(snap){
+      state[stateKey] = snap.docs.map(function(d){ var data = d.data()||{}; data.id = d.id; return data; });
+      state[stateKey+'Loaded'] = true;
+      renderAll();
+    }, function(err){ console.error(collection+' snapshot error', err); });
+  }
+  function subscribeActivity(){
+    db.collection('activity').orderBy('at','desc').limit(300).onSnapshot(function(snap){
+      state.activity = snap.docs.map(function(d){ var data = d.data()||{}; data.id = d.id; return data; });
+      state.activityLoaded = true;
+      renderAll();
+    }, function(err){ console.error('activity snapshot error', err); });
+  }
+  function subscribeTarget(){
+    db.doc('settings/target').onSnapshot(function(snap){
+      state.target = snap.exists ? snap.data() : null;
+      state.targetLoaded = true;
+      renderAll();
+    }, function(err){ console.error('target snapshot error', err); });
+  }
+  function renderNoDbState(){
+    ['view-dashboard','view-sales','view-projects','view-procurement','view-finance','view-team'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.innerHTML = '<div class="empty"><div class="emoji-mark">!</div><h3>Penyimpanan tidak tersedia</h3><p>Buka halaman ini melalui Claude untuk mengaktifkan penyimpanan data bersama tim.</p></div>';
+    });
+  }
+  async function logActivity(entityType, entityId, action, detail){
+    if(!db) return;
+    try{
+      await db.collection('activity').add({
+        entityType: entityType, entityId: entityId, action: action, detail: detail||'',
+        by: byLine(), role: state.role, at: new Date().toISOString()
+      });
+    }catch(e){}
+  }
+
+  /* =================== derived helpers =================== */
+  function projectById(id){ return state.projects.filter(function(p){ return p.id===id; })[0] || null; }
+  function posForProject(id){ return state.pos.filter(function(p){ return p.projectId===id; }); }
+  function paymentsForProject(id){ return state.payments.filter(function(p){ return p.projectId===id; }); }
+  function projectCommitted(id){
+    return posForProject(id).filter(function(p){ return ['disetujui','dipesan','diterima'].indexOf(p.status)>=0; })
+      .reduce(function(s,p){ return s+(Number(p.amount)||0); },0);
+  }
+  function projectPaid(id){
+    return paymentsForProject(id).filter(function(p){ return p.status==='paid'; })
+      .reduce(function(s,p){ return s+(Number(p.amount)||0); },0);
+  }
+  function projectPendingPayment(id){
+    return paymentsForProject(id).filter(function(p){ return p.status==='pending'; })
+      .reduce(function(s,p){ return s+(Number(p.amount)||0); },0);
+  }
+  function projectLabel(id){ var p = projectById(id); return p ? p.name : '(Proyek dihapus)'; }
+
+  // --- RAB (budget proposal) helpers ---
+  function rabForProject(id){ return state.rab.filter(function(r){ return r.projectId===id; }); }
+  function pendingRabForProject(id){ return rabForProject(id).filter(function(r){ return r.status==='diajukan'; })[0] || null; }
+  function approvedRabDoc(p){ return p && p.approvedRabId ? (state.rab.filter(function(r){ return r.id===p.approvedRabId; })[0] || null) : null; }
+
+  // --- budget exposure: PO commitments + non-PO payments already approved/paid.
+  // A payment linked to a PO (poId set) fulfills money already counted via the PO's
+  // committed amount, so it must NOT be added again here (that was the double-count
+  // bug): only non-PO-linked payments add their own exposure.
+  function projectNonPoApprovedSpend(id){
+    return paymentsForProject(id).filter(function(p){ return !p.poId && (p.status==='approved' || p.status==='paid'); })
+      .reduce(function(s,p){ return s+(Number(p.amount)||0); },0);
+  }
+  function projectBudgetExposure(id){ return projectCommitted(id) + projectNonPoApprovedSpend(id); }
+  function projectRemainingBudget(id){
+    var p = projectById(id);
+    return (p ? (Number(p.budget)||0) : 0) - projectBudgetExposure(id);
+  }
+  // --- PO payment balance: how much of a specific PO's value has NOT yet been
+  // approved/paid out via a linked payment request. Blocks double payment on one PO.
+  function poPaidOrApproved(poId){
+    return state.payments.filter(function(p){ return p.poId===poId && (p.status==='approved' || p.status==='paid'); })
+      .reduce(function(s,p){ return s+(Number(p.amount)||0); },0);
+  }
+  function poRemaining(po){ return (Number(po.amount)||0) - poPaidOrApproved(po.id); }
+
+  /* =================== render dispatch =================== */
+  function renderAll(){
+    if(!state.role) return;
+    document.querySelectorAll('.tab').forEach(function(t){
+      t.classList.toggle('active', t.getAttribute('data-view')===state.currentView);
+    });
+    document.querySelectorAll('.view').forEach(function(v){
+      v.classList.toggle('active', v.id==='view-'+state.currentView);
+    });
+    if(state.currentView==='dashboard') renderDashboard();
+    else if(state.currentView==='sales') renderSales();
+    else if(state.currentView==='projects') renderProjects();
+    else if(state.currentView==='procurement') renderProcurement();
+    else if(state.currentView==='finance') renderFinance();
+    else if(state.currentView==='team') renderTeam();
+  }
+
+  /* =================== DASHBOARD =================== */
+  function renderDashboard(){
+    var el = document.getElementById('view-dashboard');
+    if(!state.leadsLoaded || !state.projectsLoaded || !state.posLoaded || !state.paymentsLoaded){
+      el.innerHTML = '<div class="card"><div class="skeleton" style="height:120px;"></div></div>';
+      return;
+    }
+    var openLeads = state.leads.filter(function(l){ return l.stage!=='won' && l.stage!=='lost'; });
+    var pipelineValue = openLeads.reduce(function(s,l){ return s+(Number(l.value)||0); },0);
+    var thisMonth = todayStr().slice(0,7);
+    var wonThisMonth = state.leads.filter(function(l){ return l.stage==='won' && monthKey(l.closedAt)===thisMonth; });
+    var wonValue = wonThisMonth.reduce(function(s,l){ return s+(Number(l.value)||0); },0);
+
+    var activeProjects = state.projects.filter(function(p){ return p.status==='planning' || p.status==='ongoing' || p.status==='delayed'; });
+    var totalBudget = state.projects.reduce(function(s,p){ return s+(Number(p.budget)||0); },0);
+    var totalCommitted = state.projects.reduce(function(s,p){ return s+projectCommitted(p.id); },0);
+    var totalPaid = state.projects.reduce(function(s,p){ return s+projectPaid(p.id); },0);
+    var pendingApprovalValue = state.payments.filter(function(p){ return p.status==='pending'; }).reduce(function(s,p){ return s+(Number(p.amount)||0); },0);
+    var pendingApprovalCount = state.payments.filter(function(p){ return p.status==='pending'; }).length;
+    var utilization = totalBudget>0 ? Math.round((totalPaid/totalBudget)*100) : 0;
+
+    var overBudget = state.projects.filter(function(p){
+      var b = Number(p.budget)||0;
+      return b>0 && projectBudgetExposure(p.id) > b;
+    });
+    var staleApprovals = state.payments.filter(function(p){
+      if(p.status!=='pending') return false;
+      var days = daysBetween(new Date(p.createdAt||Date.now()), new Date());
+      return days >= 3;
+    }).sort(function(a,b){ return new Date(a.createdAt)-new Date(b.createdAt); });
+    var pendingRabs = state.rab.filter(function(r){ return r.status==='diajukan'; });
+
+    var html = '';
+    html += '<div class="kpi-grid">'+
+      kpiTile('Pipeline Berjalan', fmtRpShort(pipelineValue), openLeads.length+' leads aktif') +
+      kpiTile('Menang Bulan Ini', fmtRpShort(wonValue), wonThisMonth.length+' deal', wonThisMonth.length?'good':'') +
+      kpiTile('Proyek Aktif', String(activeProjects.length), state.projects.length+' total proyek') +
+      kpiTile('Committed (PO)', fmtRpShort(totalCommitted), 'nilai PO berjalan') +
+      kpiTile('Menunggu Approval', fmtRpShort(pendingApprovalValue), pendingApprovalCount+' permintaan', pendingApprovalCount?'bad':'') +
+    '</div>';
+
+    html += '<div class="grid-2" style="margin-top:14px;">';
+    // left column: funnel + budget control
+    html += '<div>';
+    html += '<div class="card">';
+    html += '<div class="section-title"><h2>Corong Sales</h2><span class="hint">nilai berjalan per tahap</span></div>';
+    html += funnelHtml();
+    html += '</div>';
+
+    html += '<div class="card" style="margin-top:14px;">';
+    html += '<div class="section-title"><h2>Kontrol Anggaran Proyek</h2><span class="hint">budget vs. committed vs. terbayar</span></div>';
+    if(!state.projects.length){
+      html += emptyState('Belum ada proyek','Proyek akan muncul di sini setelah deal Sales ditandai Menang.');
+    } else {
+      html += '<div class="bbar-legend"><span class="li"><span class="sw" style="background:var(--pic-1); opacity:.55;"></span>Eksposur Anggaran (PO + biaya)</span><span class="li"><span class="sw" style="background:var(--navy);"></span>Sudah Dibayar (kas)</span></div>';
+      state.projects.slice(0,8).forEach(function(p){
+        var budget = Number(p.budget)||0;
+        var exposure = projectBudgetExposure(p.id);
+        var paid = projectPaid(p.id);
+        var scale = Math.max(budget, exposure, 1);
+        var over = budget>0 && exposure > budget;
+        if(!budget){
+          html += '<div style="margin-block:11px;"><div style="display:flex; justify-content:space-between; font-size:12.5px; font-weight:700;"><span>'+esc(p.name)+'</span><span class="text-muted">belum ada RAB disetujui</span></div></div>';
+          return;
+        }
+        html += '<div style="margin-block:11px;">';
+        html += '<div style="display:flex; justify-content:space-between; font-size:12.5px; font-weight:700; margin-bottom:5px;"><span>'+esc(p.name)+'</span><span class="mono">'+fmtRpShort(exposure)+' / '+fmtRpShort(budget)+'</span></div>';
+        html += '<div class="bbar'+(over?' over':'')+'">';
+        html += '<div class="seg committed" style="width:'+clamp((exposure/scale)*100,0,100)+'%;"></div>';
+        html += '<div class="seg paid" style="width:'+clamp((paid/scale)*100,0,100)+'%;"></div>';
+        html += '</div>';
+        if(over) html += '<div style="font-size:11px; color:var(--bad-ink); margin-top:3px; font-weight:700;">Melebihi RAB '+fmtRpShort(exposure-budget)+'</div>';
+        html += '</div>';
+      });
+    }
+    html += '</div>';
+    html += '</div>'; // end left column
+
+    // right column: alerts
+    html += '<div>';
+    html += '<div class="card">';
+    html += '<div class="section-title"><h2>Perlu Perhatian</h2></div>';
+    if(!overBudget.length && !staleApprovals.length && !pendingRabs.length){
+      html += emptyState('Semua terkendali','Tidak ada proyek over-budget, RAB, atau approval yang menumpuk.');
+    } else {
+      if(overBudget.length){
+        overBudget.forEach(function(p){
+          html += watchItem(p.name, 'Proyek &middot; melebihi RAB disetujui', fmtRpShort(projectBudgetExposure(p.id)-(Number(p.budget)||0)), 'KELEBIHAN', 'var(--bad-ink)');
+        });
+      }
+      pendingRabs.slice(0,6).forEach(function(r){
+        html += watchItem(projectLabel(r.projectId)+' &mdash; RAB baru', 'Diajukan oleh '+esc(r.submittedBy||'-'), fmtRpShort(r.totalAmount), 'RAB', 'var(--info)');
+      });
+      staleApprovals.slice(0,6).forEach(function(pay){
+        var days = daysBetween(new Date(pay.createdAt||Date.now()), new Date());
+        html += watchItem(projectLabel(pay.projectId)+' &mdash; '+esc(pay.category||'Pembayaran'), 'Diajukan oleh '+esc(pay.requestedBy||'-'), fmtRpShort(pay.amount), days+' HARI', 'var(--warn-ink)');
+      });
+    }
+    html += '</div>';
+
+    html += '<div class="card" style="margin-top:14px;">';
+    html += '<div class="section-title"><h2>Status Proyek</h2></div>';
+    html += projectStatusBreakdown();
+    html += '</div>';
+
+    if(state.target && state.target.value){
+      var annualTarget = Number(state.target.value)||0;
+      var pct = annualTarget>0 ? Math.round((wonValueYTD()/annualTarget)*100) : 0;
+      html += '<div class="card" style="margin-top:14px;">';
+      html += '<div class="section-title"><h2>Target PO</h2><span class="hint">'+esc(state.target.month||'')+'</span></div>';
+      html += '<div style="font-family:var(--font-display); font-size:20px; font-weight:800;">'+fmtRpShort(wonValueYTD())+' <span style="color:var(--muted-2); font-size:13px; font-weight:600;">/ '+fmtRpShort(annualTarget)+'</span></div>';
+      html += '<div class="progress-track" style="margin-top:8px;"><div class="progress-fill" style="width:'+clamp(pct,0,100)+'%;"></div></div>';
+      html += '<div class="text-muted" style="font-size:12px; margin-top:6px;">'+pct+'% tercapai tahun berjalan</div>';
+      html += '</div>';
+    }
+    html += '</div>'; // end right column
+    html += '</div>'; // end grid-2
+
+    el.innerHTML = html;
+  }
+
+  function wonValueYTD(){
+    var year = todayStr().slice(0,4);
+    return state.leads.filter(function(l){ return l.stage==='won' && l.closedAt && String(l.closedAt).slice(0,4)===year; })
+      .reduce(function(s,l){ return s+(Number(l.value)||0); },0);
+  }
+
+  function kpiTile(label,value,sub,tone){
+    return '<div class="kpi"><div class="label">'+esc(label)+'</div><div class="value">'+value+'</div><div class="sub'+(tone?' '+tone:'')+'">'+esc(sub)+'</div></div>';
+  }
+  function emptyState(title,desc){
+    return '<div class="empty"><div class="emoji-mark">&middot;</div><h3>'+esc(title)+'</h3><p>'+esc(desc)+'</p></div>';
+  }
+  function watchItem(title,meta,val,label,color){
+    return '<div class="watch-item"><div><div class="wtitle">'+title+'</div><div class="wmeta">'+meta+'</div></div>'+
+      '<div class="wval"><div class="n" style="color:'+color+';">'+val+'</div><div class="l">'+label+'</div></div></div>';
+  }
+  function funnelHtml(){
+    var max = 0;
+    var rows = FUNNEL_STAGES.map(function(stg){
+      var items = state.leads.filter(function(l){ return l.stage===stg.id; });
+      var val = items.reduce(function(s,l){ return s+(Number(l.value)||0); },0);
+      max = Math.max(max,val);
+      return {stage:stg, count:items.length, value:val};
+    });
+    if(max===0) return emptyState('Belum ada leads','Tambahkan leads pertama di tab Sales.');
+    var html = '';
+    rows.forEach(function(r,i){
+      var pct = max>0 ? clamp((r.value/max)*100,6,100) : 0;
+      html += '<div class="funnel-row"><div class="flabel">'+esc(r.stage.label)+'</div><div class="ftrack"><div class="ffill" style="width:'+pct+'%; background:'+FUNNEL_COLORS[i]+';"><span>'+(r.count?fmtRpShort(r.value):'')+'</span></div></div></div>';
+    });
+    return html;
+  }
+  function projectStatusBreakdown(){
+    if(!state.projects.length) return emptyState('Belum ada proyek','Proyek muncul setelah deal Sales dimenangkan.');
+    var max = state.projects.length;
+    var html = '';
+    Object.keys(PROJECT_STATUSES).forEach(function(key){
+      var count = state.projects.filter(function(p){ return p.status===key; }).length;
+      var pct = max>0 ? (count/max)*100 : 0;
+      var st = PROJECT_STATUSES[key];
+      html += '<div class="funnel-row"><div class="flabel">'+esc(st.label)+'</div><div class="ftrack"><div class="ffill" style="width:'+clamp(pct,count?6:0,100)+'%; background:var(--'+toneColorVar(st.tone)+');"><span>'+(count||'')+'</span></div></div></div>';
+    });
+    return html;
+  }
+  function toneColorVar(tone){
+    if(tone==='good') return 'good';
+    if(tone==='bad') return 'bad';
+    if(tone==='warn') return 'warn';
+    if(tone==='violet') return 'violet';
+    return 'info';
+  }
+
+  /* =================== SALES =================== */
+  function renderSales(){
+    var el = document.getElementById('view-sales');
+    var canEdit = state.role==='sales' || state.role==='bod';
+    var f = state.salesFilters;
+    var list = state.leads.filter(function(l){
+      if(f.stage && l.stage!==f.stage) return false;
+      if(f.search){
+        var hay = (l.customer+' '+(l.pic||'')+' '+(l.solution||'')).toLowerCase();
+        if(hay.indexOf(f.search.toLowerCase())<0) return false;
+      }
+      return true;
+    });
+
+    var html = '<div class="card">';
+    html += '<div class="section-title"><h2>Pipeline Leads</h2>';
+    html += state.role==='sales' ? '<button class="btn btn-accent btn-sm" id="btn-add-lead">+ Lead Baru</button>' : '<span class="hint">'+(canEdit?'':'Hanya Sales yang dapat menambah/mengubah leads')+'</span>';
+    html += '</div>';
+    html += '<div class="toolbar">'+
+      '<input type="search" id="sales-search" placeholder="Cari customer / PIC / solusi" value="'+esc(f.search)+'">'+
+      '<select id="sales-stage-filter"><option value="">Semua tahap</option>'+LEAD_STAGES.map(function(s){ return '<option value="'+s.id+'"'+(f.stage===s.id?' selected':'')+'>'+s.label+'</option>'; }).join('')+'</select>'+
+    '</div>';
+
+    if(!state.leadsLoaded){
+      html += '<div class="skeleton" style="height:140px;"></div>';
+    } else if(!list.length){
+      html += emptyState('Tidak ada leads', state.leads.length ? 'Coba ubah filter pencarian.' : 'Tambahkan lead pertama untuk mulai tracking.');
+    } else {
+      html += '<div class="table-wrap"><table><thead><tr><th>Customer</th><th>Sektor</th><th>PIC</th><th>Solusi</th><th>Tahap</th><th style="text-align:right;">Nilai</th><th></th></tr></thead><tbody>';
+      list.forEach(function(l){
+        var stg = LEAD_STAGES.filter(function(s){ return s.id===l.stage; })[0] || {label:l.stage};
+        var tone = l.stage==='won' ? 'good' : l.stage==='lost' ? 'bad' : (l.stage==='proposal'||l.stage==='negotiation') ? 'warn' : 'info';
+        html += '<tr><td><strong>'+esc(l.customer)+'</strong></td><td>'+esc(l.sector||'-')+'</td><td>'+esc(l.pic||'-')+'</td><td>'+esc(l.solution||'-')+'</td>'+
+          '<td>'+badge(tone,stg.label)+'</td><td class="num">'+fmtRp(l.value)+'</td>'+
+          '<td><div class="row-actions">';
+        if(canEdit){
+          if(l.stage!=='won' && l.stage!=='lost'){
+            html += '<button class="btn icon-btn" title="Tandai Menang" data-win="'+l.id+'">&#10003;</button>';
+          }
+          html += '<button class="btn icon-btn" title="Edit" data-edit-lead="'+l.id+'">&#9998;</button>';
+        }
+        html += '</div></td></tr>';
+      });
+      html += '</tbody></table></div>';
+    }
+    html += '</div>';
+    el.innerHTML = html;
+
+    document.getElementById('sales-search').addEventListener('input', function(e){ state.salesFilters.search = e.target.value; renderSales(); });
+    document.getElementById('sales-stage-filter').addEventListener('change', function(e){ state.salesFilters.stage = e.target.value; renderSales(); });
+    var addBtn = document.getElementById('btn-add-lead');
+    if(addBtn) addBtn.addEventListener('click', function(){ openLeadModal(null); });
+    el.querySelectorAll('[data-edit-lead]').forEach(function(b){ b.addEventListener('click', function(){ openLeadModal(b.getAttribute('data-edit-lead')); }); });
+    el.querySelectorAll('[data-win]').forEach(function(b){ b.addEventListener('click', function(){ openWinModal(b.getAttribute('data-win')); }); });
+  }
+
+  function openLeadModal(id){
+    var lead = id ? state.leads.filter(function(l){ return l.id===id; })[0] : null;
+    var html = '<h3>'+(lead?'Edit Lead':'Lead Baru')+'</h3><div class="modal-sub">Isi detail peluang penjualan.</div>'+
+      '<form id="lead-form">'+
+      '<div class="field"><label>Customer</label><input required name="customer" value="'+esc(lead?lead.customer:'')+'"></div>'+
+      '<div class="field-row"><div class="field"><label>Sektor</label><input name="sector" value="'+esc(lead?lead.sector:'')+'"></div>'+
+      '<div class="field"><label>PIC Sales</label><input name="pic" value="'+esc(lead?lead.pic:(state.role==='sales'?state.viewerName:''))+'"></div></div>'+
+      '<div class="field"><label>Solusi</label><input name="solution" value="'+esc(lead?lead.solution:'')+'"></div>'+
+      '<div class="field-row"><div class="field"><label>Nilai (Rp)</label><input required type="number" name="value" value="'+(lead?lead.value:'')+'"></div>'+
+      '<div class="field"><label>Tahap</label><select name="stage">'+LEAD_STAGES.map(function(s){ return '<option value="'+s.id+'"'+(lead&&lead.stage===s.id?' selected':'')+'>'+s.label+'</option>'; }).join('')+'</select></div></div>'+
+      '<div class="field"><label>Catatan</label><textarea name="notes">'+esc(lead?lead.notes:'')+'</textarea></div>'+
+      '<div class="modal-actions"><button type="button" class="btn btn-ghost" id="modal-cancel">Batal</button><button type="submit" class="btn btn-accent">Simpan</button></div>'+
+      '</form>';
+    openModal(html);
+    document.getElementById('lead-form').addEventListener('submit', async function(e){
+      e.preventDefault();
+      var fd = new FormData(e.target);
+      var data = {
+        customer: fd.get('customer').trim(), sector: fd.get('sector').trim(), pic: fd.get('pic').trim(),
+        solution: fd.get('solution').trim(), value: Number(fd.get('value'))||0, stage: fd.get('stage'),
+        notes: fd.get('notes').trim(), updatedAt: new Date().toISOString()
+      };
+      try{
+        if(lead){
+          await db.collection('leads').doc(lead.id).update(data);
+          await logActivity('lead', lead.id, 'updated', data.customer);
+        } else {
+          data.createdAt = new Date().toISOString();
+          var ref = await db.collection('leads').add(data);
+          await logActivity('lead', ref.id, 'created', data.customer);
+        }
+        closeModal(); toast('Lead tersimpan');
+      }catch(err){ toast('Gagal menyimpan: akses ditolak'); }
+    });
+  }
+
+  function openWinModal(id){
+    var lead = state.leads.filter(function(l){ return l.id===id; })[0];
+    if(!lead) return;
+    var html = '<h3>Tandai Menang &amp; Buat Proyek</h3><div class="modal-sub">Deal ini akan otomatis membuat entri Proyek. Project Team mengajukan RAB setelahnya untuk Finance setujui sebelum PO/pembayaran bisa jalan.</div>'+
+      '<form id="win-form">'+
+      '<div class="field"><label>Nama Proyek</label><input required name="name" value="'+esc(lead.customer+' - '+(lead.solution||'Proyek'))+'"></div>'+
+      '<div class="field"><label>Nilai Kontrak (Rp)</label><input required type="number" name="contractValue" value="'+lead.value+'"></div>'+
+      '<div class="field-row"><div class="field"><label>Project Manager</label><input name="pm" placeholder="nama PM"></div>'+
+      '<div class="field"><label>Target Selesai</label><input type="date" name="targetEndDate"></div></div>'+
+      '<div class="modal-actions"><button type="button" class="btn btn-ghost" id="modal-cancel">Batal</button><button type="submit" class="btn btn-accent">Menang &amp; Buat Proyek</button></div>'+
+      '</form>';
+    openModal(html);
+    document.getElementById('win-form').addEventListener('submit', async function(e){
+      e.preventDefault();
+      var fd = new FormData(e.target);
+      var now = new Date().toISOString();
+      try{
+        await db.collection('leads').doc(lead.id).update({stage:'won', closedAt: todayStr(), updatedAt: now});
+        var projectData = {
+          leadId: lead.id, name: fd.get('name').trim(), customer: lead.customer,
+          contractValue: Number(fd.get('contractValue'))||0, budget: 0, approvedRabId: null,
+          pm: fd.get('pm').trim(), startDate: todayStr(), targetEndDate: fd.get('targetEndDate')||'',
+          status:'planning', progressPercent:0, notes:'', createdAt: now, updatedAt: now
+        };
+        var ref = await db.collection('projects').add(projectData);
+        await logActivity('lead', lead.id, 'won', lead.customer);
+        await logActivity('project', ref.id, 'created', projectData.name);
+        closeModal(); toast('Deal dimenangkan, proyek dibuat');
+      }catch(err){ toast('Gagal: akses ditolak'); }
+    });
+  }
+
+  /* =================== PROJECTS =================== */
+  function renderProjects(){
+    var el = document.getElementById('view-projects');
+    var f = state.projectFilters;
+    var list = state.projects.filter(function(p){
+      if(f.status && p.status!==f.status) return false;
+      if(f.search){
+        var hay = (p.name+' '+p.customer+' '+(p.pm||'')).toLowerCase();
+        if(hay.indexOf(f.search.toLowerCase())<0) return false;
+      }
+      return true;
+    });
+
+    var html = '<div class="card">';
+    html += '<div class="section-title"><h2>Daftar Proyek</h2><span class="hint">'+state.projects.length+' total</span></div>';
+    html += '<div class="toolbar">'+
+      '<input type="search" id="proj-search" placeholder="Cari proyek / customer / PM" value="'+esc(f.search)+'">'+
+      '<select id="proj-status-filter"><option value="">Semua status</option>'+Object.keys(PROJECT_STATUSES).map(function(k){ return '<option value="'+k+'"'+(f.status===k?' selected':'')+'>'+PROJECT_STATUSES[k].label+'</option>'; }).join('')+'</select>'+
+    '</div>';
+
+    if(!state.projectsLoaded){
+      html += '<div class="skeleton" style="height:160px;"></div>';
+    } else if(!list.length){
+      html += emptyState('Belum ada proyek', state.projects.length ? 'Coba ubah filter.' : 'Proyek otomatis muncul saat deal Sales ditandai Menang.');
+    } else {
+      html += '<div class="proj-grid">';
+      list.forEach(function(p){
+        var st = PROJECT_STATUSES[p.status] || {label:p.status, tone:'muted'};
+        var exposure = projectBudgetExposure(p.id);
+        var rabPending = pendingRabForProject(p.id);
+        html += '<div class="proj-card" data-open-project="'+p.id+'">'+
+          '<div class="pc-top"><div><h3>'+esc(p.name)+'</h3><div class="pc-cust">'+esc(p.customer)+'</div></div>'+badge(st.tone,st.label)+'</div>'+
+          '<div><div class="progress-track"><div class="progress-fill" style="width:'+clamp(p.progressPercent||0,0,100)+'%;"></div></div>'+
+          '<div class="text-muted" style="font-size:11.5px; margin-top:4px;">'+(p.progressPercent||0)+'% progres</div></div>'+
+          '<div class="pc-pm">PM: '+esc(p.pm||'-')+' &middot; Kontrak '+fmtRpShort(p.contractValue)+'</div>'+
+          '<div class="pc-pm">'+(p.budget ? ('Terpakai '+fmtRpShort(exposure)+' / '+fmtRpShort(p.budget)) : (rabPending ? 'RAB Rp '+fmtRpShort(rabPending.totalAmount)+' menunggu persetujuan' : 'Belum ada RAB'))+'</div>'+
+        '</div>';
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+    el.innerHTML = html;
+
+    document.getElementById('proj-search').addEventListener('input', function(e){ state.projectFilters.search = e.target.value; renderProjects(); });
+    document.getElementById('proj-status-filter').addEventListener('change', function(e){ state.projectFilters.status = e.target.value; renderProjects(); });
+    el.querySelectorAll('[data-open-project]').forEach(function(c){ c.addEventListener('click', function(){ openProjectDetail(c.getAttribute('data-open-project')); }); });
+  }
+
+  function openProjectDetail(id){
+    var p = projectById(id);
+    if(!p) return;
+    var canEdit = state.role==='project' || state.role==='bod';
+    var canSubmitRab = state.role==='project' || state.role==='bod';
+    var pos = posForProject(id);
+    var pays = paymentsForProject(id);
+    var committed = projectCommitted(id), paid = projectPaid(id);
+    var remaining = projectRemainingBudget(id);
+    var pendingRab = pendingRabForProject(id);
+    var curRab = approvedRabDoc(p);
+
+    var html = '<h3>'+esc(p.name)+'</h3><div class="modal-sub">'+esc(p.customer)+' &middot; PM: '+esc(p.pm||'-')+'</div>';
+    if(!canEdit) html += '<div class="gate-note">Hanya Project Team yang dapat mengubah status &amp; progres proyek ini.</div>';
+    html += '<div class="detail-grid">'+
+      '<div><div class="dt">Nilai Kontrak</div><div class="dd">'+fmtRp(p.contractValue)+'</div></div>'+
+      '<div><div class="dt">RAB Disetujui</div><div class="dd">'+(p.budget?fmtRp(p.budget):'Belum ada')+'</div></div>'+
+      '<div><div class="dt">Eksposur (PO + biaya)</div><div class="dd">'+fmtRp(committed+projectNonPoApprovedSpend(id))+'</div></div>'+
+      '<div><div class="dt">Sisa RAB</div><div class="dd" style="color:'+(p.budget && remaining<0 ? 'var(--bad-ink)' : 'inherit')+';">'+(p.budget?fmtRp(remaining):'-')+'</div></div>'+
+      '<div><div class="dt">Mulai</div><div class="dd">'+fmtDate(p.startDate)+'</div></div>'+
+      '<div><div class="dt">Target Selesai</div><div class="dd">'+fmtDate(p.targetEndDate)+'</div></div>'+
+    '</div>';
+
+    // --- RAB section ---
+    html += '<div class="sub-table"><div class="section-title"><h2 style="font-size:13px;">RAB (Rencana Anggaran Biaya)</h2>';
+    if(canSubmitRab && !pendingRab) html += '<button class="btn btn-sm btn-ghost" id="btn-ajukan-rab">'+(p.budget?'Ajukan Revisi RAB':'Ajukan RAB')+'</button>';
+    html += '</div>';
+    if(pendingRab){
+      html += '<div class="gate-note" style="background:var(--info-bg); color:var(--info);">RAB baru Rp '+fmtRp(pendingRab.totalAmount)+' sedang menunggu persetujuan Finance (diajukan oleh '+esc(pendingRab.submittedBy||'-')+'). PO/pembayaran baru tetap mengacu ke RAB yang sudah disetujui sampai keputusan keluar.</div>';
+    }
+    if(curRab && curRab.items && curRab.items.length){
+      html += '<div class="table-wrap"><table><thead><tr><th>Kategori</th><th>Keterangan</th><th style="text-align:right;">Nilai</th></tr></thead><tbody>';
+      curRab.items.forEach(function(it){
+        html += '<tr><td>'+esc(it.category)+'</td><td>'+esc(it.description||'-')+'</td><td class="num">'+fmtRp(it.amount)+'</td></tr>';
+      });
+      html += '</tbody></table></div>';
+    } else if(!pendingRab){
+      html += '<div class="text-muted" style="font-size:12.5px;">Belum ada RAB untuk proyek ini &mdash; PO belum bisa dibuat sebelum RAB disetujui Finance.</div>';
+    }
+    html += '</div>';
+
+    html += '<form id="project-form">'+
+      '<div class="field-row"><div class="field"><label>Status</label><select name="status" '+(canEdit?'':'disabled')+'>'+Object.keys(PROJECT_STATUSES).map(function(k){ return '<option value="'+k+'"'+(p.status===k?' selected':'')+'>'+PROJECT_STATUSES[k].label+'</option>'; }).join('')+'</select></div>'+
+      '<div class="field"><label>Progres (%)</label><input type="number" min="0" max="100" name="progressPercent" value="'+(p.progressPercent||0)+'" '+(canEdit?'':'disabled')+'></div></div>'+
+      '<div class="field"><label>Catatan Pelaksanaan</label><textarea name="notes" '+(canEdit?'':'disabled')+'>'+esc(p.notes||'')+'</textarea></div>';
+    if(canEdit){
+      html += '<div class="modal-actions"><button type="button" class="btn btn-ghost" id="modal-cancel">Tutup</button><button type="submit" class="btn btn-accent">Simpan Perubahan</button></div>';
+    } else {
+      html += '<div class="modal-actions"><button type="button" class="btn btn-ghost" id="modal-cancel">Tutup</button></div>';
+    }
+    html += '</form>';
+
+    html += '<div class="sub-table"><div class="section-title"><h2 style="font-size:13px;">PO Terkait ('+pos.length+')</h2>'+
+      (p.budget ? '<button class="btn btn-sm btn-ghost" id="btn-new-po-from-project">+ Buat PO</button>' : '<span class="hint">RAB belum disetujui</span>') +
+      '</div>';
+    if(!pos.length){ html += '<div class="text-muted" style="font-size:12.5px;">Belum ada PO untuk proyek ini.</div>'; }
+    else {
+      html += '<div class="table-wrap"><table><thead><tr><th>Vendor</th><th>Status</th><th style="text-align:right;">Nilai</th></tr></thead><tbody>';
+      pos.forEach(function(po){
+        var st = PO_STATUSES[po.status]||{label:po.status,tone:'muted'};
+        html += '<tr><td>'+esc(po.vendorName)+'</td><td>'+badge(st.tone,st.label)+'</td><td class="num">'+fmtRp(po.amount)+'</td></tr>';
+      });
+      html += '</tbody></table></div>';
+    }
+    html += '</div>';
+
+    html += '<div class="sub-table"><div class="section-title"><h2 style="font-size:13px;">Permintaan Pembayaran ('+pays.length+')</h2></div>';
+    if(!pays.length){ html += '<div class="text-muted" style="font-size:12.5px;">Belum ada permintaan pembayaran.</div>'; }
+    else {
+      html += '<div class="table-wrap"><table><thead><tr><th>Kategori</th><th>Status</th><th style="text-align:right;">Nilai</th></tr></thead><tbody>';
+      pays.forEach(function(pay){
+        var st = PAYMENT_STATUSES[pay.status]||{label:pay.status,tone:'muted'};
+        html += '<tr><td>'+esc(pay.category)+'</td><td>'+badge(st.tone,st.label)+'</td><td class="num">'+fmtRp(pay.amount)+'</td></tr>';
+      });
+      html += '</tbody></table></div>';
+    }
+    html += '</div>';
+
+    openModal(html);
+    var poBtn = document.getElementById('btn-new-po-from-project');
+    if(poBtn) poBtn.addEventListener('click', function(){ closeModal(); openPoModal(null, p.id); });
+    var rabBtn = document.getElementById('btn-ajukan-rab');
+    if(rabBtn) rabBtn.addEventListener('click', function(){ closeModal(); openRabModal(p.id); });
+    if(canEdit){
+      document.getElementById('project-form').addEventListener('submit', async function(e){
+        e.preventDefault();
+        var fd = new FormData(e.target);
+        var data = {
+          status: fd.get('status'), progressPercent: clamp(Number(fd.get('progressPercent'))||0,0,100),
+          notes: fd.get('notes').trim(), updatedAt: new Date().toISOString()
+        };
+        try{
+          await db.collection('projects').doc(p.id).update(data);
+          await logActivity('project', p.id, 'updated', p.name+' -> '+data.status+' ('+data.progressPercent+'%)');
+          closeModal(); toast('Proyek diperbarui');
+        }catch(err){ toast('Gagal: akses ditolak'); }
+      });
+    }
+  }
+
+  function openRabModal(projectId){
+    var p = projectById(projectId);
+    if(!p) return;
+    var rowIdx = 0;
+    var rows = [];
+
+    function addRow(category, description, amount){
+      var idx = rowIdx++;
+      rows.push(idx);
+      return idx;
+    }
+    function rowHtml(idx, category, description, amount){
+      return '<div class="field-row" data-rab-row="'+idx+'" style="align-items:flex-end;">'+
+        '<div class="field" style="margin-bottom:8px;"><label>Kategori</label><select name="cat_'+idx+'">'+RAB_CATEGORIES.map(function(c){ return '<option value="'+c+'"'+(category===c?' selected':'')+'>'+c+'</option>'; }).join('')+'</select></div>'+
+        '<div class="field" style="margin-bottom:8px;"><label>Nilai (Rp)</label><input type="number" class="rab-amt" name="amt_'+idx+'" value="'+(amount||'')+'" oninput="void(0)"></div>'+
+        '</div>'+
+        '<div class="field" style="margin-bottom:8px;"><label>Keterangan</label><div style="display:flex; gap:8px;"><input name="desc_'+idx+'" value="'+esc(description||'')+'" style="flex:1;"><button type="button" class="btn icon-btn" data-remove-rab-row="'+idx+'">&times;</button></div></div>';
+    }
+
+    addRow();
+    var html = '<h3>'+(p.budget?'Ajukan Revisi RAB':'Ajukan RAB')+'</h3><div class="modal-sub">'+esc(p.name)+' &mdash; rincian rencana anggaran biaya untuk disetujui Finance.</div>'+
+      (p.budget ? '<div class="gate-note" style="background:var(--info-bg); color:var(--info);">RAB baru akan menggantikan RAB disetujui sebelumnya (Rp '+fmtRp(p.budget)+') setelah disetujui.</div>' : '') +
+      '<form id="rab-form">'+
+      '<div id="rab-items">'+rowHtml(0,'','','')+'</div>'+
+      '<button type="button" class="btn btn-sm btn-ghost" id="btn-add-rab-row" style="margin-bottom:12px;">+ Tambah Baris</button>'+
+      '<div style="display:flex; justify-content:space-between; font-weight:800; font-size:14px; padding-top:8px; border-top:1px solid var(--border); margin-bottom:13px;"><span>Total RAB</span><span class="mono" id="rab-total">Rp0</span></div>'+
+      '<div class="field"><label>Catatan</label><textarea name="notes" placeholder="konteks tambahan untuk Finance"></textarea></div>'+
+      '<div class="modal-actions"><button type="button" class="btn btn-ghost" id="modal-cancel">Batal</button><button type="submit" class="btn btn-accent">Ajukan ke Finance</button></div>'+
+      '</form>';
+    openModal(html);
+
+    function recalcTotal(){
+      var total = 0;
+      document.querySelectorAll('#rab-items .rab-amt').forEach(function(inp){ total += Number(inp.value)||0; });
+      document.getElementById('rab-total').textContent = fmtRp(total);
+    }
+    function wireRow(){
+      document.getElementById('rab-items').querySelectorAll('.rab-amt').forEach(function(inp){
+        inp.removeEventListener('input', recalcTotal);
+        inp.addEventListener('input', recalcTotal);
+      });
+      document.getElementById('rab-items').querySelectorAll('[data-remove-rab-row]').forEach(function(btn){
+        btn.onclick = function(){
+          var row = document.querySelector('[data-rab-row="'+btn.getAttribute('data-remove-rab-row')+'"]');
+          var descRow = row ? row.nextElementSibling : null;
+          if(row && row.parentElement.children.length > 2){
+            if(descRow) descRow.remove();
+            row.remove();
+            recalcTotal();
+          } else {
+            toast('Minimal satu baris RAB');
+          }
+        };
+      });
+    }
+    wireRow();
+    document.getElementById('btn-add-rab-row').addEventListener('click', function(){
+      var idx = addRow();
+      document.getElementById('rab-items').insertAdjacentHTML('beforeend', rowHtml(idx,'','',''));
+      wireRow();
+    });
+
+    document.getElementById('rab-form').addEventListener('submit', async function(e){
+      e.preventDefault();
+      var fd = new FormData(e.target);
+      var items = [];
+      rows.forEach(function(idx){
+        var amt = Number(fd.get('amt_'+idx))||0;
+        if(amt <= 0) return;
+        items.push({category: fd.get('cat_'+idx), description: (fd.get('desc_'+idx)||'').trim(), amount: amt});
+      });
+      if(!items.length){ toast('Isi minimal satu baris dengan nilai > 0'); return; }
+      var total = items.reduce(function(s,it){ return s+it.amount; },0);
+      try{
+        var ref = await db.collection('rab').add({
+          projectId: projectId, items: items, totalAmount: total, status:'diajukan',
+          submittedBy: byLine(), notes: (fd.get('notes')||'').trim(), createdAt: new Date().toISOString()
+        });
+        await logActivity('rab', ref.id, 'submitted', p.name+' (Rp'+fmtRp(total)+')');
+        closeModal(); toast('RAB diajukan ke Finance');
+      }catch(err){ toast('Gagal mengajukan: akses ditolak'); }
+    });
+  }
+
+  /* =================== PROCUREMENT =================== */
+  function renderProcurement(){
+    var el = document.getElementById('view-procurement');
+    var canCreate = state.role==='procurement' || state.role==='project' || state.role==='bod';
+    var canAdvance = state.role==='procurement' || state.role==='bod';
+    var f = state.poFilters;
+    var list = state.pos.filter(function(po){
+      if(f.status && po.status!==f.status) return false;
+      if(f.type && po.vendorType!==f.type) return false;
+      if(f.search){
+        var hay = (po.vendorName+' '+projectLabel(po.projectId)).toLowerCase();
+        if(hay.indexOf(f.search.toLowerCase())<0) return false;
+      }
+      return true;
+    });
+
+    var totalCommitted = state.pos.filter(function(po){ return ['disetujui','dipesan','diterima'].indexOf(po.status)>=0; }).reduce(function(s,po){ return s+(Number(po.amount)||0); },0);
+
+    var html = '<div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);">'+
+      kpiTile('Total PO', String(state.pos.length), state.pos.length+' purchase order') +
+      kpiTile('Nilai Committed', fmtRpShort(totalCommitted), 'PO disetujui ke atas') +
+      kpiTile('Menunggu Persetujuan', String(state.pos.filter(function(po){ return po.status==='diajukan'; }).length), 'PO diajukan') +
+    '</div>';
+
+    html += '<div class="card" style="margin-top:14px;">';
+    html += '<div class="section-title"><h2>Purchase Order</h2>';
+    html += canCreate ? '<button class="btn btn-accent btn-sm" id="btn-add-po">+ PO Baru</button>' : '<span class="hint">Hanya Procurement/Project Team yang dapat membuat PO</span>';
+    html += '</div>';
+    html += '<div class="toolbar">'+
+      '<input type="search" id="po-search" placeholder="Cari vendor / proyek" value="'+esc(f.search)+'">'+
+      '<select id="po-status-filter"><option value="">Semua status</option>'+Object.keys(PO_STATUSES).map(function(k){ return '<option value="'+k+'"'+(f.status===k?' selected':'')+'>'+PO_STATUSES[k].label+'</option>'; }).join('')+'</select>'+
+      '<select id="po-type-filter"><option value="">Semua tipe</option><option value="subkon"'+(f.type==='subkon'?' selected':'')+'>Subkon</option><option value="supplier"'+(f.type==='supplier'?' selected':'')+'>Supplier</option></select>'+
+    '</div>';
+
+    if(!state.posLoaded){ html += '<div class="skeleton" style="height:140px;"></div>'; }
+    else if(!list.length){ html += emptyState('Belum ada PO', state.pos.length ? 'Coba ubah filter.' : 'Buat PO pertama dari proyek yang sedang berjalan.'); }
+    else {
+      html += '<div class="table-wrap"><table><thead><tr><th>Proyek</th><th>Vendor</th><th>Tipe</th><th>Status</th><th style="text-align:right;">Nilai</th><th>Jatuh Tempo</th><th></th></tr></thead><tbody>';
+      list.forEach(function(po){
+        var st = PO_STATUSES[po.status]||{label:po.status,tone:'muted'};
+        html += '<tr><td>'+esc(projectLabel(po.projectId))+'</td><td>'+esc(po.vendorName)+'</td><td>'+esc(po.vendorType==='subkon'?'Subkon':'Supplier')+'</td>'+
+          '<td>'+badge(st.tone,st.label)+'</td><td class="num">'+fmtRp(po.amount)+'</td><td>'+fmtDate(po.dueDate)+'</td>'+
+          '<td><div class="row-actions">';
+        if(canAdvance && po.status!=='ditolak'){
+          var flowIdx = PO_FLOW.indexOf(po.status);
+          if(flowIdx>=0 && flowIdx < PO_FLOW.length-1){
+            html += '<button class="btn btn-sm" data-advance-po="'+po.id+'">'+PO_STATUSES[PO_FLOW[flowIdx+1]].label+' &rarr;</button>';
+          }
+          if(po.status==='diajukan'){
+            html += '<button class="btn btn-sm btn-bad" data-reject-po="'+po.id+'">Tolak</button>';
+          }
+        }
+        if((canCreate && po.status==='draft')) html += '<button class="btn icon-btn" title="Edit" data-edit-po="'+po.id+'">&#9998;</button>';
+        html += '</div></td></tr>';
+      });
+      html += '</tbody></table></div>';
+    }
+    html += '</div>';
+    el.innerHTML = html;
+
+    document.getElementById('po-search').addEventListener('input', function(e){ state.poFilters.search = e.target.value; renderProcurement(); });
+    document.getElementById('po-status-filter').addEventListener('change', function(e){ state.poFilters.status = e.target.value; renderProcurement(); });
+    document.getElementById('po-type-filter').addEventListener('change', function(e){ state.poFilters.type = e.target.value; renderProcurement(); });
+    var addBtn = document.getElementById('btn-add-po');
+    if(addBtn) addBtn.addEventListener('click', function(){ openPoModal(null,null); });
+    el.querySelectorAll('[data-edit-po]').forEach(function(b){ b.addEventListener('click', function(){ openPoModal(b.getAttribute('data-edit-po'),null); }); });
+    el.querySelectorAll('[data-advance-po]').forEach(function(b){ b.addEventListener('click', async function(){
+      var id = b.getAttribute('data-advance-po');
+      var po = state.pos.filter(function(x){ return x.id===id; })[0];
+      var idx = PO_FLOW.indexOf(po.status);
+      var next = PO_FLOW[idx+1];
+      if(next==='disetujui'){
+        // this PO isn't counted in projectRemainingBudget yet (only disetujui+ counts),
+        // so check it against the remaining budget before it becomes committed.
+        var remain = projectRemainingBudget(po.projectId);
+        if((Number(po.amount)||0) > remain){
+          toast('Tidak bisa disetujui: melebihi sisa RAB proyek (Rp '+fmtRp(remain)+')');
+          return;
+        }
+      }
+      try{
+        await db.collection('pos').doc(id).update({status:next, approvedBy: byLine(), updatedAt:new Date().toISOString()});
+        await logActivity('po', id, 'status_changed', po.vendorName+' -> '+next);
+        toast('Status PO diperbarui');
+      }catch(err){ toast('Gagal: akses ditolak'); }
+    }); });
+    el.querySelectorAll('[data-reject-po]').forEach(function(b){ b.addEventListener('click', async function(){
+      var id = b.getAttribute('data-reject-po');
+      try{
+        await db.collection('pos').doc(id).update({status:'ditolak', updatedAt:new Date().toISOString()});
+        await logActivity('po', id, 'rejected', '');
+        toast('PO ditolak');
+      }catch(err){ toast('Gagal: akses ditolak'); }
+    }); });
+  }
+
+  function openPoModal(id, presetProjectId){
+    var po = id ? state.pos.filter(function(p){ return p.id===id; })[0] : null;
+    var projectsWithRab = state.projects.filter(function(p){ return p.budget>0; });
+    var projOptions = projectsWithRab.map(function(p){ return '<option value="'+p.id+'"'+((po&&po.projectId===p.id)||(!po&&presetProjectId===p.id)?' selected':'')+'>'+esc(p.name)+'</option>'; }).join('');
+    var dupConfirmed = false;
+    if(!po && !projectsWithRab.length){
+      openModal('<h3>PO Baru</h3><div class="gate-note">Belum ada proyek dengan RAB yang disetujui. Ajukan RAB dari halaman Proyek terlebih dulu sebelum membuat PO.</div><div class="modal-actions"><button type="button" class="btn btn-ghost" id="modal-cancel">Tutup</button></div>');
+      return;
+    }
+    var html = '<h3>'+(po?'Edit PO':'PO Baru')+'</h3><div class="modal-sub">Purchase order ke subkon atau supplier &mdash; hanya untuk proyek dengan RAB disetujui.</div>'+
+      '<form id="po-form">'+
+      '<div class="field"><label>Proyek</label><select required name="projectId" id="po-project">'+projOptions+'</select></div>'+
+      '<div id="po-remaining" class="text-muted" style="font-size:12px; margin:-6px 0 12px;"></div>'+
+      '<div class="field-row"><div class="field"><label>Nama Vendor</label><input required name="vendorName" id="po-vendor" value="'+esc(po?po.vendorName:'')+'"></div>'+
+      '<div class="field"><label>Tipe</label><select name="vendorType"><option value="subkon"'+(po&&po.vendorType==='subkon'?' selected':'')+'>Subkon</option><option value="supplier"'+(po&&po.vendorType==='supplier'?' selected':'')+'>Supplier</option></select></div></div>'+
+      '<div class="field"><label>Deskripsi Pekerjaan/Barang</label><textarea name="description">'+esc(po?po.description:'')+'</textarea></div>'+
+      '<div class="field-row"><div class="field"><label>Nilai (Rp)</label><input required type="number" name="amount" id="po-amount" value="'+(po?po.amount:'')+'"></div>'+
+      '<div class="field"><label>Jatuh Tempo</label><input type="date" name="dueDate" value="'+(po?po.dueDate:'')+'"></div></div>'+
+      '<div id="po-warning"></div>'+
+      '<div class="modal-actions"><button type="button" class="btn btn-ghost" id="modal-cancel">Batal</button><button type="submit" class="btn btn-accent" id="po-submit-btn">Simpan</button></div>'+
+      '</form>';
+    openModal(html);
+
+    function refreshPoRemaining(){
+      var projectId = document.getElementById('po-project').value;
+      var rem = projectRemainingBudget(projectId);
+      document.getElementById('po-remaining').textContent = 'Sisa RAB proyek ini: Rp ' + fmtRp(rem);
+      dupConfirmed = false;
+      document.getElementById('po-warning').innerHTML = '';
+      document.getElementById('po-submit-btn').textContent = 'Simpan';
+    }
+    document.getElementById('po-project').addEventListener('change', refreshPoRemaining);
+    document.getElementById('po-vendor').addEventListener('input', function(){ dupConfirmed=false; document.getElementById('po-submit-btn').textContent='Simpan'; document.getElementById('po-warning').innerHTML=''; });
+    document.getElementById('po-amount').addEventListener('input', function(){ dupConfirmed=false; document.getElementById('po-submit-btn').textContent='Simpan'; document.getElementById('po-warning').innerHTML=''; });
+    refreshPoRemaining();
+
+    document.getElementById('po-form').addEventListener('submit', async function(e){
+      e.preventDefault();
+      var fd = new FormData(e.target);
+      var projectId = fd.get('projectId'), vendorName = fd.get('vendorName').trim(), amount = Number(fd.get('amount'))||0;
+
+      // Budget guard: draft/editing an existing PO that's not yet committed doesn't
+      // consume budget, so only block for a brand-new submission.
+      if(!po){
+        var remain = projectRemainingBudget(projectId);
+        if(amount > remain){
+          document.getElementById('po-warning').innerHTML = '<div class="gate-note" style="background:var(--bad-bg); color:var(--bad-ink);">Nilai PO melebihi sisa RAB proyek (Rp '+fmtRp(remain)+'). Naikkan RAB terlebih dulu jika memang diperlukan.</div>';
+          return;
+        }
+        var dup = state.pos.filter(function(x){
+          return x.projectId===projectId && x.vendorName.trim().toLowerCase()===vendorName.toLowerCase() && Number(x.amount)===amount && x.status!=='ditolak';
+        });
+        if(dup.length && !dupConfirmed){
+          dupConfirmed = true;
+          document.getElementById('po-submit-btn').textContent = 'Ya, Tetap Ajukan';
+          document.getElementById('po-warning').innerHTML = '<div class="gate-note">Sudah ada PO ke vendor &amp; nilai yang sama untuk proyek ini (status: '+esc(PO_STATUSES[dup[0].status].label)+'). Klik sekali lagi jika ini memang bukan pengajuan ganda.</div>';
+          return;
+        }
+      }
+
+      var data = {
+        projectId: projectId, vendorName: vendorName, vendorType: fd.get('vendorType'),
+        description: fd.get('description').trim(), amount: amount, dueDate: fd.get('dueDate')||'',
+        updatedAt: new Date().toISOString()
+      };
+      try{
+        if(po){
+          await db.collection('pos').doc(po.id).update(data);
+          await logActivity('po', po.id, 'updated', data.vendorName);
+        } else {
+          data.status = 'diajukan'; data.requestedBy = byLine(); data.createdAt = new Date().toISOString();
+          var ref = await db.collection('pos').add(data);
+          await logActivity('po', ref.id, 'created', data.vendorName+' ('+fmtRp(data.amount)+')');
+        }
+        closeModal(); toast('PO tersimpan');
+      }catch(err){ toast('Gagal menyimpan: akses ditolak'); }
+    });
+  }
+
+  /* =================== FINANCE =================== */
+  function renderFinance(){
+    var el = document.getElementById('view-finance');
+    var canRequest = ['procurement','project','finance','bod'].indexOf(state.role)>=0;
+    var canDecide = state.role==='finance' || state.role==='bod';
+    var f = state.paymentFilters;
+    var list = state.payments.filter(function(p){
+      if(f.status && p.status!==f.status) return false;
+      if(f.search){
+        var hay = (projectLabel(p.projectId)+' '+(p.category||'')+' '+(p.requestedBy||'')).toLowerCase();
+        if(hay.indexOf(f.search.toLowerCase())<0) return false;
+      }
+      return true;
+    });
+
+    var pendingValue = state.payments.filter(function(p){ return p.status==='pending'; }).reduce(function(s,p){ return s+(Number(p.amount)||0); },0);
+    var paidThisMonth = state.payments.filter(function(p){ return p.status==='paid' && monthKey(p.paidAt)===todayStr().slice(0,7); }).reduce(function(s,p){ return s+(Number(p.amount)||0); },0);
+    var totalBudget = state.projects.reduce(function(s,p){ return s+(Number(p.budget)||0); },0);
+    var totalExposure = state.projects.reduce(function(s,p){ return s+projectBudgetExposure(p.id); },0);
+    var pendingRabQueue = state.rab.filter(function(r){ return r.status==='diajukan'; });
+    var canDecideRab = state.role==='finance' || state.role==='bod';
+
+    var html = '<div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);">'+
+      kpiTile('RAB Menunggu', String(pendingRabQueue.length), pendingRabQueue.length?fmtRpShort(pendingRabQueue.reduce(function(s,r){return s+r.totalAmount;},0)):'tidak ada antrean', pendingRabQueue.length?'bad':'') +
+      kpiTile('Menunggu Keputusan', fmtRpShort(pendingValue), state.payments.filter(function(p){return p.status==='pending';}).length+' permintaan', pendingValue?'bad':'') +
+      kpiTile('Dibayar Bulan Ini', fmtRpShort(paidThisMonth), 'realisasi kas keluar') +
+      kpiTile('Total RAB Disetujui', fmtRpShort(totalBudget), state.projects.length+' proyek') +
+      kpiTile('Eksposur vs RAB', (totalBudget?Math.round((totalExposure/totalBudget)*100):0)+'%', fmtRpShort(totalExposure)+' terpakai') +
+    '</div>';
+
+    html += '<div class="card" style="margin-top:14px;">';
+    html += '<div class="section-title"><h2>Persetujuan RAB</h2><span class="hint">PO &amp; pembayaran baru terkunci ke angka ini begitu disetujui</span></div>';
+    if(!state.rabLoaded){ html += '<div class="skeleton" style="height:90px;"></div>'; }
+    else if(!pendingRabQueue.length){ html += emptyState('Tidak ada RAB menunggu', 'RAB baru dari Project Team akan muncul di sini.'); }
+    else {
+      html += '<div class="table-wrap"><table><thead><tr><th>Proyek</th><th>Diajukan Oleh</th><th style="text-align:right;">Total</th><th></th></tr></thead><tbody>';
+      pendingRabQueue.forEach(function(r){
+        html += '<tr><td>'+esc(projectLabel(r.projectId))+'</td><td>'+esc(r.submittedBy||'-')+'</td><td class="num">'+fmtRp(r.totalAmount)+'</td>'+
+          '<td><div class="row-actions"><button class="btn btn-sm" data-view-rab="'+r.id+'">Lihat Rincian</button></div></td></tr>';
+      });
+      html += '</tbody></table></div>';
+    }
+    html += '</div>';
+
+    html += '<div class="card" style="margin-top:14px;">';
+    html += '<div class="section-title"><h2>Permintaan Pembayaran</h2>';
+    html += canRequest ? '<button class="btn btn-accent btn-sm" id="btn-add-payment">+ Ajukan Pembayaran</button>' : '';
+    html += '</div>';
+    html += '<div class="toolbar">'+
+      '<input type="search" id="pay-search" placeholder="Cari proyek / kategori / pemohon" value="'+esc(f.search)+'">'+
+      '<select id="pay-status-filter"><option value="">Semua status</option>'+Object.keys(PAYMENT_STATUSES).map(function(k){ return '<option value="'+k+'"'+(f.status===k?' selected':'')+'>'+PAYMENT_STATUSES[k].label+'</option>'; }).join('')+'</select>'+
+    '</div>';
+
+    if(!state.paymentsLoaded){ html += '<div class="skeleton" style="height:140px;"></div>'; }
+    else if(!list.length){ html += emptyState('Belum ada permintaan pembayaran', state.payments.length ? 'Coba ubah filter.' : 'Ajukan permintaan pembayaran pertama dari Procurement atau Project Team.'); }
+    else {
+      html += '<div class="table-wrap"><table><thead><tr><th>Proyek</th><th>Kategori</th><th>Pemohon</th><th>Status</th><th style="text-align:right;">Nilai</th><th></th></tr></thead><tbody>';
+      list.forEach(function(pay){
+        var st = PAYMENT_STATUSES[pay.status]||{label:pay.status,tone:'muted'};
+        html += '<tr><td>'+esc(projectLabel(pay.projectId))+'</td><td>'+esc(pay.category)+'</td><td>'+esc(pay.requestedBy||'-')+'</td>'+
+          '<td>'+badge(st.tone,st.label)+'</td><td class="num">'+fmtRp(pay.amount)+'</td>'+
+          '<td><div class="row-actions">';
+        if(canDecide && pay.status==='pending'){
+          html += '<button class="btn btn-sm btn-good" data-approve-pay="'+pay.id+'">Setujui</button>';
+          html += '<button class="btn btn-sm btn-bad" data-reject-pay="'+pay.id+'">Tolak</button>';
+        }
+        if(canDecide && pay.status==='approved'){
+          html += '<button class="btn btn-sm btn-accent" data-paid-pay="'+pay.id+'">Tandai Dibayar</button>';
+        }
+        html += '</div></td></tr>';
+      });
+      html += '</tbody></table></div>';
+    }
+    html += '</div>';
+    el.innerHTML = html;
+
+    document.getElementById('pay-search').addEventListener('input', function(e){ state.paymentFilters.search = e.target.value; renderFinance(); });
+    document.getElementById('pay-status-filter').addEventListener('change', function(e){ state.paymentFilters.status = e.target.value; renderFinance(); });
+    el.querySelectorAll('[data-view-rab]').forEach(function(b){ b.addEventListener('click', function(){ openRabDecisionModal(b.getAttribute('data-view-rab')); }); });
+    var addBtn = document.getElementById('btn-add-payment');
+    if(addBtn) addBtn.addEventListener('click', function(){ openPaymentModal(); });
+    el.querySelectorAll('[data-approve-pay]').forEach(function(b){ b.addEventListener('click', function(){ decidePayment(b.getAttribute('data-approve-pay'),'approved'); }); });
+    el.querySelectorAll('[data-reject-pay]').forEach(function(b){ b.addEventListener('click', function(){ decidePayment(b.getAttribute('data-reject-pay'),'rejected'); }); });
+    el.querySelectorAll('[data-paid-pay]').forEach(function(b){ b.addEventListener('click', function(){ decidePayment(b.getAttribute('data-paid-pay'),'paid'); }); });
+  }
+
+  async function decidePayment(id, status){
+    var pay = state.payments.filter(function(x){ return x.id===id; })[0];
+    if(!pay) return;
+    // Re-check at decision time (not just at submission time) so two requests that
+    // each looked fine individually can't jointly exceed the PO or project budget.
+    if(status==='approved'){
+      if(pay.poId){
+        var po = state.pos.filter(function(x){ return x.id===pay.poId; })[0];
+        if(po){
+          var otherPaid = poPaidOrApproved(po.id) - (['approved','paid'].indexOf(pay.status)>=0 ? (Number(pay.amount)||0) : 0);
+          var poRemain = (Number(po.amount)||0) - otherPaid;
+          if(pay.amount > poRemain){ toast('Ditolak otomatis: melebihi sisa nilai PO ('+fmtRp(poRemain)+') - cegah pembayaran ganda'); return; }
+        }
+      } else {
+        var otherSpend = projectNonPoApprovedSpend(pay.projectId) - (['approved','paid'].indexOf(pay.status)>=0 ? (Number(pay.amount)||0) : 0);
+        var projBudget = (projectById(pay.projectId)||{}).budget || 0;
+        var projRemain = projBudget - projectCommitted(pay.projectId) - otherSpend;
+        if(pay.amount > projRemain){ toast('Ditolak otomatis: melebihi sisa RAB proyek ('+fmtRp(projRemain)+')'); return; }
+      }
+    }
+    try{
+      var data = {status: status, decidedAt: new Date().toISOString(), decidedBy: byLine()};
+      if(status==='paid') data.paidAt = new Date().toISOString();
+      await db.collection('payments').doc(id).update(data);
+      await logActivity('payment', id, status, '');
+      toast('Status pembayaran diperbarui');
+    }catch(err){ toast('Gagal: akses ditolak'); }
+  }
+
+  function openRabDecisionModal(rabId){
+    var r = state.rab.filter(function(x){ return x.id===rabId; })[0];
+    if(!r) return;
+    var p = projectById(r.projectId);
+    var canDecide = state.role==='finance' || state.role==='bod';
+    var html = '<h3>RAB &mdash; '+esc(p?p.name:'Proyek')+'</h3><div class="modal-sub">Diajukan oleh '+esc(r.submittedBy||'-')+'</div>';
+    if(r.notes) html += '<div class="text-muted" style="font-size:12.5px; margin-bottom:10px;">Catatan: '+esc(r.notes)+'</div>';
+    html += '<div class="table-wrap"><table><thead><tr><th>Kategori</th><th>Keterangan</th><th style="text-align:right;">Nilai</th></tr></thead><tbody>';
+    (r.items||[]).forEach(function(it){
+      html += '<tr><td>'+esc(it.category)+'</td><td>'+esc(it.description||'-')+'</td><td class="num">'+fmtRp(it.amount)+'</td></tr>';
+    });
+    html += '</tbody></table></div>';
+    html += '<div style="display:flex; justify-content:space-between; font-weight:800; font-size:14px; padding-top:10px;"><span>Total</span><span class="mono">'+fmtRp(r.totalAmount)+'</span></div>';
+    if(!canDecide){
+      html += '<div class="gate-note" style="margin-top:13px;">Hanya Finance/BoD yang dapat memutuskan RAB ini.</div>';
+      html += '<div class="modal-actions"><button type="button" class="btn btn-ghost" id="modal-cancel">Tutup</button></div>';
+    } else {
+      html += '<div class="modal-actions"><button type="button" class="btn btn-ghost" id="modal-cancel">Tutup</button>'+
+        '<button type="button" class="btn btn-bad" id="btn-tolak-rab">Tolak</button>'+
+        '<button type="button" class="btn btn-accent" id="btn-setujui-rab">Setujui RAB</button></div>';
+    }
+    openModal(html);
+    if(canDecide){
+      document.getElementById('btn-tolak-rab').addEventListener('click', async function(){
+        try{
+          await db.collection('rab').doc(r.id).update({status:'ditolak', decidedBy: byLine(), decidedAt:new Date().toISOString()});
+          await logActivity('rab', r.id, 'rejected', '');
+          closeModal(); toast('RAB ditolak');
+        }catch(err){ toast('Gagal: akses ditolak'); }
+      });
+      document.getElementById('btn-setujui-rab').addEventListener('click', async function(){
+        try{
+          await db.collection('rab').doc(r.id).update({status:'disetujui', decidedBy: byLine(), decidedAt:new Date().toISOString()});
+          if(p) await db.collection('projects').doc(p.id).update({budget: r.totalAmount, approvedRabId: r.id, updatedAt:new Date().toISOString()});
+          await logActivity('rab', r.id, 'approved', (p?p.name:'')+' (Rp'+fmtRp(r.totalAmount)+')');
+          closeModal(); toast('RAB disetujui, budget proyek diperbarui');
+        }catch(err){ toast('Gagal: akses ditolak'); }
+      });
+    }
+  }
+
+  function openPaymentModal(presetProjectId){
+    var projOptions = state.projects.map(function(p){ return '<option value="'+p.id+'"'+(presetProjectId===p.id?' selected':'')+'>'+esc(p.name)+'</option>'; }).join('');
+    var dupConfirmed = false;
+    var html = '<h3>Ajukan Permintaan Pembayaran</h3><div class="modal-sub">Akan masuk ke antrean persetujuan Finance.</div>'+
+      '<form id="pay-form">'+
+      '<div class="field"><label>Proyek</label><select required name="projectId" id="pay-project">'+projOptions+'</select></div>'+
+      '<div class="field"><label>PO Terkait (opsional)</label><select name="poId" id="pay-po"></select></div>'+
+      '<div id="pay-remaining" class="text-muted" style="font-size:12px; margin:-6px 0 12px;"></div>'+
+      '<div class="field-row"><div class="field"><label>Kategori</label><select name="category">'+PAYMENT_CATEGORIES.map(function(c){ return '<option value="'+c+'">'+c+'</option>'; }).join('')+'</select></div>'+
+      '<div class="field"><label>Nilai (Rp)</label><input required type="number" name="amount" id="pay-amount"></div></div>'+
+      '<div class="field"><label>Catatan</label><textarea name="notes" placeholder="mis. termin 2 dari 3"></textarea></div>'+
+      '<div id="pay-warning"></div>'+
+      '<div class="modal-actions"><button type="button" class="btn btn-ghost" id="modal-cancel">Batal</button><button type="submit" class="btn btn-accent" id="pay-submit-btn">Ajukan</button></div>'+
+      '</form>';
+    openModal(html);
+
+    function refreshPoOptions(){
+      var projectId = document.getElementById('pay-project').value;
+      var pos = posForProject(projectId).filter(function(po){ return ['disetujui','dipesan','diterima'].indexOf(po.status)>=0; });
+      var sel = document.getElementById('pay-po');
+      sel.innerHTML = '<option value="">&mdash; Tidak terkait PO (biaya operasional) &mdash;</option>'+
+        pos.map(function(po){ return '<option value="'+po.id+'">'+esc(po.vendorName)+' &middot; '+fmtRp(po.amount)+'</option>'; }).join('');
+      refreshRemaining();
+    }
+    function refreshRemaining(){
+      var projectId = document.getElementById('pay-project').value;
+      var poId = document.getElementById('pay-po').value;
+      var el = document.getElementById('pay-remaining');
+      if(poId){
+        var po = state.pos.filter(function(x){ return x.id===poId; })[0];
+        el.textContent = po ? ('Sisa pembayaran PO ini: Rp '+fmtRp(poRemaining(po))) : '';
+      } else {
+        var rem = projectRemainingBudget(projectId);
+        var proj = projectById(projectId);
+        el.textContent = proj && proj.budget ? ('Sisa RAB proyek (di luar PO): Rp '+fmtRp(rem)) : 'Proyek ini belum punya RAB disetujui';
+      }
+      dupConfirmed = false;
+      document.getElementById('pay-warning').innerHTML = '';
+      document.getElementById('pay-submit-btn').textContent = 'Ajukan';
+    }
+    document.getElementById('pay-project').addEventListener('change', refreshPoOptions);
+    document.getElementById('pay-po').addEventListener('change', refreshRemaining);
+    document.getElementById('pay-amount').addEventListener('input', function(){ dupConfirmed=false; document.getElementById('pay-submit-btn').textContent='Ajukan'; document.getElementById('pay-warning').innerHTML=''; });
+    refreshPoOptions();
+
+    document.getElementById('pay-form').addEventListener('submit', async function(e){
+      e.preventDefault();
+      var fd = new FormData(e.target);
+      var projectId = fd.get('projectId'), poId = fd.get('poId')||null, amount = Number(fd.get('amount'))||0;
+
+      if(poId){
+        var po = state.pos.filter(function(x){ return x.id===poId; })[0];
+        var remain = po ? poRemaining(po) : 0;
+        if(amount > remain){
+          document.getElementById('pay-warning').innerHTML = '<div class="gate-note" style="background:var(--bad-bg); color:var(--bad-ink);">Nilai melebihi sisa PO (Rp '+fmtRp(remain)+'). Pembayaran ganda terhadap PO yang sama tidak diperbolehkan.</div>';
+          return;
+        }
+      } else {
+        var proj = projectById(projectId);
+        var remainB = projectRemainingBudget(projectId);
+        if(proj && proj.budget && amount > remainB){
+          document.getElementById('pay-warning').innerHTML = '<div class="gate-note" style="background:var(--bad-bg); color:var(--bad-ink);">Nilai melebihi sisa RAB proyek (Rp '+fmtRp(remainB)+').</div>';
+          return;
+        }
+      }
+
+      // soft duplicate-submission check: same project+PO+amount already pending/approved
+      var dup = state.payments.filter(function(x){
+        return x.projectId===projectId && (x.poId||null)===(poId||null) && Number(x.amount)===amount && ['pending','approved'].indexOf(x.status)>=0;
+      });
+      if(dup.length && !dupConfirmed){
+        dupConfirmed = true;
+        document.getElementById('pay-submit-btn').textContent = 'Ya, Tetap Ajukan';
+        document.getElementById('pay-warning').innerHTML = '<div class="gate-note">Sudah ada permintaan pembayaran serupa (proyek, PO, dan nilai yang sama) berstatus '+esc(PAYMENT_STATUSES[dup[0].status].label)+'. Klik sekali lagi jika ini memang bukan pengajuan ganda.</div>';
+        return;
+      }
+
+      var data = {
+        projectId: projectId, poId: poId, category: fd.get('category'), amount: amount,
+        notes: fd.get('notes').trim(), status:'pending', requestedBy: byLine(), createdAt: new Date().toISOString()
+      };
+      try{
+        var ref = await db.collection('payments').add(data);
+        await logActivity('payment', ref.id, 'requested', data.category+' ('+fmtRp(data.amount)+')');
+        closeModal(); toast('Permintaan pembayaran diajukan');
+      }catch(err){ toast('Gagal mengajukan: akses ditolak'); }
+    });
+  }
+
+  /* =================== TEAM =================== */
+  function renderTeam(){
+    var el = document.getElementById('view-team');
+    var canSetTarget = state.role==='finance' || state.role==='bod';
+    var html = '<div class="grid-2">';
+
+    html += '<div class="card">';
+    html += '<div class="section-title"><h2>Direktori Tim</h2><button class="btn btn-sm btn-accent" id="btn-add-member">+ Tambah</button></div>';
+    if(!state.teamLoaded){ html += '<div class="skeleton" style="height:100px;"></div>'; }
+    else if(!state.team.length){ html += emptyState('Belum ada anggota tim', 'Tambahkan anggota tim untuk referensi divisi.'); }
+    else {
+      html += '<div class="table-wrap"><table><thead><tr><th>Nama</th><th>Divisi</th><th></th></tr></thead><tbody>';
+      state.team.forEach(function(m){
+        html += '<tr><td><strong>'+esc(m.name)+'</strong></td><td>'+badge('info',(ROLES[m.role]||{short:m.role}).short)+'</td>'+
+          '<td><div class="row-actions"><button class="btn icon-btn" title="Hapus" data-del-member="'+m.id+'">&times;</button></div></td></tr>';
+      });
+      html += '</tbody></table></div>';
+    }
+    html += '</div>';
+
+    html += '<div class="card">';
+    html += '<div class="section-title"><h2>Target PO</h2></div>';
+    if(!canSetTarget){
+      html += '<div class="gate-note">Hanya Finance/BoD yang dapat mengubah target.</div>';
+    }
+    html += '<form id="target-form">'+
+      '<div class="field"><label>Nilai Target Tahunan (Rp)</label><input type="number" name="value" value="'+(state.target?state.target.value:'')+'" '+(canSetTarget?'':'disabled')+'></div>'+
+      '<div class="field"><label>Label Periode</label><input name="month" value="'+esc(state.target?state.target.month:'')+'" placeholder="mis. FY2027" '+(canSetTarget?'':'disabled')+'></div>';
+    if(canSetTarget) html += '<button type="submit" class="btn btn-accent btn-sm">Simpan Target</button>';
+    html += '</form>';
+    html += '</div>';
+
+    html += '</div>';
+    el.innerHTML = html;
+
+    document.getElementById('btn-add-member').addEventListener('click', openMemberModal);
+    el.querySelectorAll('[data-del-member]').forEach(function(b){ b.addEventListener('click', async function(){
+      try{ await db.collection('team').doc(b.getAttribute('data-del-member')).delete(); toast('Anggota dihapus'); }
+      catch(err){ toast('Gagal: akses ditolak'); }
+    }); });
+    if(canSetTarget){
+      document.getElementById('target-form').addEventListener('submit', async function(e){
+        e.preventDefault();
+        var fd = new FormData(e.target);
+        try{
+          await db.doc('settings/target').set({value:Number(fd.get('value'))||0, month: fd.get('month').trim(), updatedAt:new Date().toISOString(), updatedBy: byLine()});
+          toast('Target tersimpan');
+        }catch(err){ toast('Gagal: akses ditolak'); }
+      });
+    }
+  }
+
+  function openMemberModal(){
+    var html = '<h3>Tambah Anggota Tim</h3>'+
+      '<form id="member-form">'+
+      '<div class="field"><label>Nama</label><input required name="name"></div>'+
+      '<div class="field"><label>Divisi</label><select name="role">'+Object.keys(ROLES).map(function(k){ return '<option value="'+k+'">'+ROLES[k].label+'</option>'; }).join('')+'</select></div>'+
+      '<div class="modal-actions"><button type="button" class="btn btn-ghost" id="modal-cancel">Batal</button><button type="submit" class="btn btn-accent">Tambah</button></div>'+
+      '</form>';
+    openModal(html);
+    document.getElementById('member-form').addEventListener('submit', async function(e){
+      e.preventDefault();
+      var fd = new FormData(e.target);
+      try{
+        await db.collection('team').add({name:fd.get('name').trim(), role:fd.get('role'), createdAt:new Date().toISOString()});
+        closeModal(); toast('Anggota ditambahkan');
+      }catch(err){ toast('Gagal: akses ditolak'); }
+    });
+  }
+
+  /* =================== modal shell =================== */
+  function openModal(html){
+    document.getElementById('modal-body').innerHTML = html;
+    document.getElementById('overlay').classList.add('open');
+    var cancel = document.getElementById('modal-cancel');
+    if(cancel) cancel.addEventListener('click', closeModal);
+  }
+  function closeModal(){ document.getElementById('overlay').classList.remove('open'); }
+  document.getElementById('overlay').addEventListener('click', function(e){ if(e.target.id==='overlay') closeModal(); });
+
+  /* =================== boot =================== */
+  function boot(){
+    if(loadLocalProfile()) showMain(); else showGate();
+    initCapabilities();
+  }
+  boot();
+})();
+</script>

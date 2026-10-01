@@ -1,0 +1,42 @@
+[
+  {
+    "id": "act-1",
+    "entityType": "payment",
+    "entityId": "pay-3",
+    "action": "requested",
+    "detail": "Pembayaran Supplier (Rp130.000.000)",
+    "by": "Yuri (Proyek)",
+    "role": "project",
+    "at": "2026-09-30T10:00:00.000Z"
+  },
+  {
+    "id": "act-2",
+    "entityType": "rab",
+    "entityId": "rab-3",
+    "action": "submitted",
+    "detail": "Modernisasi Data Center Bank Danamon (Rp290.000.000)",
+    "by": "Maulana (Proyek)",
+    "role": "project",
+    "at": "2026-09-30T16:00:00.000Z"
+  },
+  {
+    "id": "act-3",
+    "entityType": "lead",
+    "entityId": "lead-danamon",
+    "action": "won",
+    "detail": "Modernisasi Data Center & DR Site (Rp420.000.000)",
+    "by": "Jessica (Sales)",
+    "role": "sales",
+    "at": "2026-09-30T15:00:00.000Z"
+  },
+  {
+    "id": "act-4",
+    "entityType": "payment",
+    "entityId": "pay-2",
+    "action": "requested",
+    "detail": "Pembayaran Supplier (Rp125.000.000)",
+    "by": "Sony (Proyek)",
+    "role": "project",
+    "at": "2026-09-27T09:00:00.000Z"
+  }
+]

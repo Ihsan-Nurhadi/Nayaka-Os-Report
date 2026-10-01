@@ -1,0 +1,58 @@
+[
+  {
+    "id": "pay-1",
+    "projectId": "proj-1",
+    "poId": "po-1",
+    "category": "Pembayaran Supplier",
+    "amount": 125000000,
+    "status": "paid",
+    "notes": "Uang muka termin 1 (50%) pemesanan unit sensor",
+    "requestedBy": "Sony (Proyek)",
+    "decidedBy": "Lisna (Finance)",
+    "decidedAt": "2026-09-16T10:00:00.000Z",
+    "paidAt": "2026-09-17T14:00:00.000Z",
+    "createdAt": "2026-09-15T09:00:00.000Z"
+  },
+  {
+    "id": "pay-2",
+    "projectId": "proj-1",
+    "poId": "po-1",
+    "category": "Pembayaran Supplier",
+    "amount": 125000000,
+    "status": "pending",
+    "notes": "Pelunasan sisa 50% sensor barang tiba di gudang",
+    "requestedBy": "Sony (Proyek)",
+    "decidedBy": null,
+    "decidedAt": null,
+    "paidAt": null,
+    "createdAt": "2026-09-27T09:00:00.000Z"
+  },
+  {
+    "id": "pay-3",
+    "projectId": "proj-2",
+    "poId": "po-3",
+    "category": "Pembayaran Supplier",
+    "amount": 130000000,
+    "status": "pending",
+    "notes": "Pembayaran pelunasan unit display (barang sudah diterima)",
+    "requestedBy": "Yuri (Proyek)",
+    "decidedBy": null,
+    "decidedAt": null,
+    "paidAt": null,
+    "createdAt": "2026-09-30T10:00:00.000Z"
+  },
+  {
+    "id": "pay-4",
+    "projectId": "proj-1",
+    "poId": null,
+    "category": "Biaya Perjalanan",
+    "amount": 15000000,
+    "status": "approved",
+    "notes": "Akomodasi & uang saku teknisi survey jembatan",
+    "requestedBy": "Sony (Proyek)",
+    "decidedBy": "Lisna (Finance)",
+    "decidedAt": "2026-09-29T11:00:00.000Z",
+    "paidAt": null,
+    "createdAt": "2026-09-28T13:00:00.000Z"
+  }
+]

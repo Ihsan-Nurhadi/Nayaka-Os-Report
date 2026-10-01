@@ -1,0 +1,58 @@
+[
+  {
+    "id": "po-1",
+    "projectId": "proj-1",
+    "vendorName": "PT Sensorika Prima Indonesia",
+    "vendorType": "supplier",
+    "description": "Pengadaan Sensor Getaran & Data Logger IoT",
+    "amount": 250000000,
+    "dueDate": "2026-10-15",
+    "status": "dipesan",
+    "requestedBy": "Sony (Proyek)",
+    "approvedBy": "Lisna (Finance)",
+    "createdAt": "2026-09-14T09:00:00.000Z",
+    "updatedAt": "2026-09-15T14:00:00.000Z"
+  },
+  {
+    "id": "po-2",
+    "projectId": "proj-1",
+    "vendorName": "CV Tehnik Mandiri Jaya",
+    "vendorType": "subkon",
+    "description": "Jasa Instalasi & Kalibrasi Sensor Jembatan",
+    "amount": 180000000,
+    "dueDate": "2026-10-30",
+    "status": "disetujui",
+    "requestedBy": "Sony (Proyek)",
+    "approvedBy": "Lisna (Finance)",
+    "createdAt": "2026-09-15T10:00:00.000Z",
+    "updatedAt": "2026-09-16T11:00:00.000Z"
+  },
+  {
+    "id": "po-3",
+    "projectId": "proj-2",
+    "vendorName": "PT Display Solusindo Media",
+    "vendorType": "supplier",
+    "description": "Display Screen Commercial Grade 55\" (8 Unit)",
+    "amount": 130000000,
+    "dueDate": "2026-09-29",
+    "status": "diterima",
+    "requestedBy": "Yuri (Proyek)",
+    "approvedBy": "Lisna (Finance)",
+    "createdAt": "2026-09-23T09:00:00.000Z",
+    "updatedAt": "2026-09-29T16:00:00.000Z"
+  },
+  {
+    "id": "po-4",
+    "projectId": "proj-2",
+    "vendorName": "CV Cipta Karya Listrik",
+    "vendorType": "subkon",
+    "description": "Pekerjaan Instalasi Daya & Braket Dinding Display",
+    "amount": 50000000,
+    "dueDate": "2026-10-20",
+    "status": "diajukan",
+    "requestedBy": "Yuri (Proyek)",
+    "approvedBy": null,
+    "createdAt": "2026-09-29T11:00:00.000Z",
+    "updatedAt": "2026-09-29T11:00:00.000Z"
+  }
+]
